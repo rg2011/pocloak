@@ -51,7 +51,7 @@ import { AuthService } from './core/auth.service';
                 <button class="button is-primary" (click)="openLoginModal()" *ngIf="!isAuthenticated()">Login</button>
                 <button class="button is-danger is-outlined" (click)="authService.logout()" *ngIf="isAuthenticated()">Logout</button>
                 <span class="tag" [class.is-success]="isAuthenticated()" [class.is-warning]="!isAuthenticated()">
-                  {{ isAuthenticated() ? 'Authenticated' : 'Anonymous' }}
+                  {{ isAuthenticated() ? authLabel() : 'Anonymous' }}
                 </span>
               </div>
             </div>
@@ -100,6 +100,16 @@ import { AuthService } from './core/auth.service';
 export class AppComponent {
   readonly authService = inject(AuthService);
   readonly isAuthenticated = computed(() => this.authService.authState().isAuthenticated);
+  readonly authLabel = computed(() => {
+    const authState = this.authService.authState();
+    if (authState.validatedIdp) {
+      return `${authState.validatedIdp} (verified)`;
+    }
+    if (authState.kcIdpHint) {
+      return `${authState.kcIdpHint} (unverified)`;
+    }
+    return 'unknown idp';
+  });
   readonly isLoginModalOpen = signal(false);
   serviceNameInput = '';
 

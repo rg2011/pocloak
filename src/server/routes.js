@@ -168,7 +168,9 @@ function createApiRoutes() {
   router.get('/auth/status', (req, res) => {
     res.json({
       isAuthenticated: Boolean(req.session.auth),
-      tokens: getSafeTokenView(req)
+      tokens: getSafeTokenView(req),
+      kcIdpHint: req.session.oidc?.kcIdpHint || null,
+      validatedIdp: req.session.auth?.validatedIdp || null
     });
   });
 
@@ -426,7 +428,7 @@ function createAppRoutes() {
       const tokenSet = await oidc.authorizationCodeGrant(oidcConfiguration, currentUrl, checks);
       
       // Store tokens in server-side session (never exposed to browser)
-      setSessionTokens(req, tokenSet);
+      setSessionTokens(req, tokenSet, { trustedIdpClaim: config.trustedIdpClaim });
       return res.redirect('/tokens');
     } catch (error) {
       console.error('[auth] Error in OIDC callback:', error.message);

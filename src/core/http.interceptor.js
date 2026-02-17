@@ -16,9 +16,9 @@ async function tryRefreshToken(req) {
   }
 
   // Use refresh_token to get new access_token without user interaction
-  const { oidcConfiguration } = await getOidcClient();
+  const { oidcConfiguration, config } = await getOidcClient();
   const refreshed = await oidc.refreshTokenGrant(oidcConfiguration, auth.refreshToken);
-  setSessionTokens(req, refreshed);
+  setSessionTokens(req, refreshed, { trustedIdpClaim: config.trustedIdpClaim });
   console.info('[interceptor] Access token refreshed automatically');
 }
 

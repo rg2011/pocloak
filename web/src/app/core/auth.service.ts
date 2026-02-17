@@ -5,7 +5,7 @@ import { AuthStatus } from './api.types';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  readonly authState = signal<AuthStatus>({ isAuthenticated: false, tokens: null });
+  readonly authState = signal<AuthStatus>({ isAuthenticated: false, tokens: null, kcIdpHint: null, validatedIdp: null });
 
   constructor(private readonly http: HttpClient) {}
 

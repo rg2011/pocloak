@@ -15,4 +15,6 @@ export interface HttpExchange {
 export interface AuthStatus {
   isAuthenticated: boolean;
   tokens: unknown;
+  kcIdpHint: string | null;
+  validatedIdp: string | null;
 }

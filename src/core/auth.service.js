@@ -1,9 +1,10 @@
 // Auth Service: manages OIDC tokens in server-side session
 // Tokens are NEVER sent to the browser, only metadata about them
 
-function setSessionTokens(req, tokenSet) {
+function setSessionTokens(req, tokenSet, options = {}) {
   const nowInSeconds = Math.floor(Date.now() / 1000);
   const expiresAt = tokenSet.expires_at || (tokenSet.expires_in ? nowInSeconds + tokenSet.expires_in : null);
+  const validatedIdp = extractValidatedIdp(tokenSet, options.trustedIdpClaim);
 
   req.session.auth = {
     accessToken: tokenSet.access_token,
@@ -12,8 +13,59 @@ function setSessionTokens(req, tokenSet) {
     expiresAt,
     tokenType: tokenSet.token_type,
     scope: tokenSet.scope,
+    validatedIdp,
     updatedAt: Date.now()
   };
+}
+
+// Read identity provider alias from Keycloak-issued token claims.
+// This value is validated by Keycloak during login and safer than user-provided hints.
+function extractValidatedIdp(tokenSet, trustedIdpClaim = '') {
+  const configuredClaim = typeof trustedIdpClaim === 'string' ? trustedIdpClaim.trim() : '';
+  const accessTokenClaims = decodeJwt(tokenSet.access_token);
+
+  if (configuredClaim) {
+    const configuredValue = readClaimValue(accessTokenClaims, configuredClaim);
+    return configuredValue || null;
+  }
+
+  const idTokenClaims = decodeJwt(tokenSet.id_token);
+  const idpFromIdToken = pickIdpAlias(idTokenClaims);
+  const idpFromAccessToken = pickIdpAlias(accessTokenClaims);
+  return idpFromIdToken || idpFromAccessToken || null;
+}
+
+function pickIdpAlias(claims) {
+  if (!claims || typeof claims !== 'object') {
+    return null;
+  }
+
+  const record = claims;
+  const fromIdentityProvider = typeof record.identity_provider === 'string' ? record.identity_provider.trim() : '';
+  const fromIdpAlias = typeof record.idp_alias === 'string' ? record.idp_alias.trim() : '';
+
+  return fromIdentityProvider || fromIdpAlias || null;
+}
+
+function readClaimValue(claims, claimPath) {
+  if (!claims || typeof claims !== 'object' || !claimPath) {
+    return null;
+  }
+
+  const value = claimPath
+    .split('.')
+    .reduce((current, part) => (current && typeof current === 'object' ? current[part] : undefined), claims);
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed || null;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  return null;
 }
 
 function clearSession(req) {

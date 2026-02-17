@@ -19,6 +19,9 @@ import { firstValueFrom } from 'rxjs';
           <li [class.is-active]="activeTab() === 'config'">
             <a (click)="activeTab.set('config')">Config</a>
           </li>
+          <li [class.is-active]="activeTab() === 'idp-hint'">
+            <a (click)="activeTab.set('idp-hint')">IdP Hint</a>
+          </li>
           <li [class.is-active]="activeTab() === 'frontend'">
             <a (click)="activeTab.set('frontend')">Frontend</a>
           </li>
@@ -67,6 +70,10 @@ import { firstValueFrom } from 'rxjs';
             <tr>
               <th>UMA Audience</th>
               <td><code>{{ config().umaAudience || '(not set)' }}</code></td>
+            </tr>
+            <tr>
+              <th>Trusted IdP Claim</th>
+              <td><code>{{ config().trustedIdpClaim || '(not set)' }}</code></td>
             </tr>
           </tbody>
         </table>
@@ -121,6 +128,39 @@ import { firstValueFrom } from 'rxjs';
           <li>If <code>discoveryUrl</code> changes, keep <code>/.well-known/</code> so realm metadata can be derived.</li>
         </ul>
       </div>
+
+      <div class="content" *ngIf="activeTab() === 'idp-hint'">
+        <div class="card">
+          <header class="card-header">
+            <p class="card-header-title">Multi-tenancy with multiple IdP (Identity Providers)</p>
+          </header>
+          <div class="card-content">
+            <ol>
+              <li>User writes a value in login modal (for example <code>kc-tools</code>).</li>
+              <li>Frontend redirects to <code>/login?kc_idp_hint=kc-tools</code>.</li>
+              <li>Backend forwards <code>kc_idp_hint</code> to Keycloak authorization URL.</li>
+              <li>After callback, backend reads a configured claim from access token (<code>OIDC_TRUSTED_IDP_CLAIM</code>).</li>
+              <li>Claim value is stored as trusted <code>validatedIdp</code> in session (for example <code>tools</code>).</li>
+            </ol>
+            <p>
+              In Keycloak, this can be configured with an IdP mapper type <code>Hardcoded User Session Attribute</code>, setting
+              the session attribute used by <code>OIDC_TRUSTED_IDP_CLAIM</code>.
+            </p>
+            <p class="has-text-grey mt-2">
+              Example mapper (obfuscated): alias hint <code>kc-tools</code>, trusted claim value <code>tools</code>.
+            </p>
+          </div>
+          <div class="card-image">
+            <figure class="image">
+              <img
+                src="assets/idp-session-mapper-obfuscated.png"
+                alt="Example Keycloak IdP mapper with obfuscated id and hardcoded session attribute value"
+                style="width: 80%; margin: 0 auto;"
+              />
+            </figure>
+          </div>
+        </div>
+      </div>
     </article>
   `
 })
@@ -128,7 +168,7 @@ export class HomePageComponent {
   private readonly http = inject(HttpClient);
   private readonly route = inject(ActivatedRoute);
   readonly message = computed(() => this.route.snapshot.queryParamMap.get('message') || '');
-  readonly activeTab = signal<'config' | 'frontend' | 'backend' | 'keycloak'>('config');
+  readonly activeTab = signal<'config' | 'frontend' | 'backend' | 'keycloak' | 'idp-hint'>('config');
   readonly config = signal<any>(null);
   readonly error = signal('');
 

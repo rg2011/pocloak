@@ -20,4 +20,5 @@ services:
       - OIDC_PKCE_METHOD=${OIDC_PKCE_METHOD:-S256}
       - OIDC_SCOPE=${OIDC_SCOPE:-openid profile email offline_access}
       - OIDC_UMA_AUDIENCE=${OIDC_UMA_AUDIENCE}
+      - OIDC_TRUSTED_IDP_CLAIM=${OIDC_TRUSTED_IDP_CLAIM}
       - APP_DOMAIN=${APP_DOMAIN:-http://localhost:3000}

@@ -21,7 +21,10 @@ function loadRuntimeConfig() {
     scope: process.env.OIDC_SCOPE || 'openid profile email offline_access',
     
     // UMA audience (optional, for User-Managed Access)
-    umaAudience: process.env.OIDC_UMA_AUDIENCE || ''
+    umaAudience: process.env.OIDC_UMA_AUDIENCE || '',
+
+    // Optional access-token claim used as trusted IdP source (for example: identity_provider)
+    trustedIdpClaim: process.env.OIDC_TRUSTED_IDP_CLAIM || ''
   };
 }
 

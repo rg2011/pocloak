@@ -71,6 +71,7 @@ Protected:
 - `GET /api/oidc/userinfo`
 - `GET /api/oidc/introspect`
 - `GET /api/oidc/uma`
+- `GET /api/oidc/token-exchange`
 
 Auth control:
 
@@ -118,7 +119,20 @@ Configuration is loaded from environment variables:
 - `APP_DOMAIN`
 - `OIDC_SCOPE`
 - `OIDC_UMA_AUDIENCE`
+- `OIDC_TRUSTED_IDP_CLAIM`
 - `SESSION_SECRET`
+
+`OIDC_TRUSTED_IDP_CLAIM` is optional. If set, backend reads that claim path from the **access token** and stores it in session as trusted IdP (`validatedIdp`).
+
+Example values:
+
+- `identity_provider`
+- `idp_alias`
+- `custom.idp.alias`
+
+If this parameter is empty, backend falls back to default claim detection (`identity_provider` then `idp_alias`).
+
+`kc_idp_hint` from login is treated as user input. It can still be shown in UI as unverified text, but trusted IdP should come from token claims.
 
 To configure:
 
