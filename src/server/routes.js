@@ -5,12 +5,6 @@ const { tokenRefreshInterceptor } = require('../core/http.interceptor');
 const { clearSession, getSafeTokenView, setSessionTokens } = require('../core/auth.service');
 const { buildCallbackUrl, createAuthRequest, getOidcClient } = require('../core/oidc.client');
 const { getConfigFilePath, getRawConfigFile, loadRuntimeConfig, saveConfigFile } = require('./keycloak.config');
-const { homePage } = require('../features/home/home.controller');
-const { renderTokens } = require('../features/tokens/tokens.view');
-const { renderSession } = require('../features/session/session.view');
-const { renderConfig } = require('../features/config/config.view');
-const { renderOidcPage } = require('../features/oidc/oidc.view');
-const { renderDiscoveryPage } = require('../features/discovery/discovery.view');
 
 const OBFUSCATED_SECRET = '[secret-obfuscated]';
 const SENSITIVE_FIELD_NAMES = new Set([
@@ -201,100 +195,37 @@ async function executeOidcHttpCall({ url, method, headers = {}, body = null, req
   });
 }
 
-function createAppRoutes() {
+function createApiRoutes() {
   const router = express.Router();
 
-  router.get('/', homePage);
-
-  router.get('/login', async (req, res) => {
-    try {
-      const { oidcConfiguration, config } = await getOidcClient();
-      const authRequest = createAuthRequest(req.session, config);
-      const authorizationParams = {
-        scope: config.scope,
-        redirect_uri: buildCallbackUrl(config),
-        state: authRequest.state,
-        nonce: authRequest.nonce
-      };
-
-      if (config.usePkce) {
-        authorizationParams.code_challenge_method = config.pkceMethod;
-        authorizationParams.code_challenge = authRequest.codeChallenge;
-      }
-
-      const authorizationUrl = oidc.buildAuthorizationUrl(oidcConfiguration, authorizationParams).toString();
-
-      console.info('[auth] Redirigiendo a Keycloak /authorize');
-      return res.redirect(authorizationUrl);
-    } catch (error) {
-      console.error('[auth] Error en /login:', error.message);
-      return res.redirect('/?message=Error%20iniciando%20login');
-    }
+  router.get('/health', (req, res) => {
+    res.json({ status: 'ok', now: new Date().toISOString() });
   });
 
-  router.get('/auth/callback', async (req, res) => {
-    try {
-      const callbackError = typeof req.query.error === 'string' ? req.query.error : '';
-      const callbackErrorDescription = typeof req.query.error_description === 'string' ? req.query.error_description : '';
-
-      if (callbackError) {
-        const detail = callbackErrorDescription ? `${callbackError}: ${callbackErrorDescription}` : callbackError;
-        console.error('[auth] Callback OIDC devolvió error OAuth:', detail);
-        return res.redirect(`/?message=${encodeURIComponent(`Error en callback OIDC (${detail})`)}`);
-      }
-
-      const { oidcConfiguration, config } = await getOidcClient();
-      const checks = {
-        expectedState: req.session.oidc?.state,
-        expectedNonce: req.session.oidc?.nonce
-      };
-
-      if (config.usePkce) {
-        checks.pkceCodeVerifier = req.session.oidc?.codeVerifier;
-      }
-
-      const currentUrl = new URL(req.originalUrl, config.domain);
-      const tokenSet = await oidc.authorizationCodeGrant(oidcConfiguration, currentUrl, checks);
-      setSessionTokens(req, tokenSet);
-      console.info('[auth] Callback OK, tokens guardados en sesión');
-      return res.redirect('/tokens');
-    } catch (error) {
-      console.error('[auth] Error en callback OIDC:', error.message);
-      return res.redirect('/?message=Error%20en%20callback%20OIDC');
-    }
-  });
-
-  router.post('/logout', async (req, res) => {
-    clearSession(req);
-    return res.redirect('/?message=Sesión%20cerrada');
+  router.get('/auth/status', (req, res) => {
+    res.json({
+      isAuthenticated: Boolean(req.session.auth),
+      tokens: getSafeTokenView(req)
+    });
   });
 
   router.get('/config', (req, res) => {
-    res.send(
-      renderConfig({
-        isAuthenticated: Boolean(req.session.auth),
-        filePath: getConfigFilePath(),
-        runtimeConfig: loadRuntimeConfig(),
-        rawConfig: getRawConfigFile(),
-        message: req.query.message || '',
-        error: req.query.error || ''
-      })
-    );
+    res.json({
+      filePath: getConfigFilePath(),
+      runtimeConfig: loadRuntimeConfig(),
+      rawConfig: getRawConfigFile()
+    });
+  });
+
+  router.post('/config', (req, res) => {
+    const nextConfig = req.body;
+    const savedConfig = saveConfigFile(nextConfig || {});
+    res.json({ ok: true, config: savedConfig });
   });
 
   router.post('/config/restart', (req, res) => {
-    try {
-      const parsed = JSON.parse(req.body.configJson || '{}');
-      saveConfigFile(parsed);
-      res.redirect('/?message=Configuración%20guardada.%20Reiniciando%20proceso...');
-      setTimeout(() => process.exit(0), 150);
-    } catch (error) {
-      return res.redirect('/config?error=JSON%20inválido%20en%20configuración');
-    }
-  });
-
-  router.get('/discovery', (req, res) => {
-    res.send(renderDiscoveryPage({ isAuthenticated: Boolean(req.session.auth) }));
+    res.json({ ok: true, message: 'Configuración guardada. Reiniciando proceso...' });
+    setTimeout(() => process.exit(0), 150);
   });
 
   router.get('/discovery/data', async (req, res) => {
@@ -341,20 +272,20 @@ function createAppRoutes() {
   router.use(authGuard, tokenRefreshInterceptor());
 
   router.get('/tokens', (req, res) => {
-    res.send(
-      renderTokens({
-        isAuthenticated: true,
-        tokens: getSafeTokenView(req)
-      })
-    );
+    res.json(getSafeTokenView(req));
   });
 
   router.get('/session', (req, res) => {
-    res.send(renderSession({ isAuthenticated: true, session: req.session }));
-  });
-
-  router.get('/oidc', (req, res) => {
-    res.send(renderOidcPage({ isAuthenticated: true }));
+    res.json({
+      auth: {
+        expiresAt: req.session.auth?.expiresAt || null,
+        tokenType: req.session.auth?.tokenType || null,
+        scope: req.session.auth?.scope || null,
+        updatedAt: req.session.auth?.updatedAt || null,
+        hasRefreshToken: Boolean(req.session.auth?.refreshToken)
+      },
+      oidc: req.session.oidc || null
+    });
   });
 
   router.get('/oidc/userinfo', async (req, res) => {
@@ -448,6 +379,73 @@ function createAppRoutes() {
 
     res.json(exchange);
   });
+
+  return router;
+}
+
+function createAppRoutes() {
+  const router = express.Router();
+
+  router.get('/login', async (req, res) => {
+    try {
+      const { oidcConfiguration, config } = await getOidcClient();
+      const authRequest = createAuthRequest(req.session, config);
+      const authorizationParams = {
+        scope: config.scope,
+        redirect_uri: buildCallbackUrl(config),
+        state: authRequest.state,
+        nonce: authRequest.nonce
+      };
+
+      if (config.usePkce) {
+        authorizationParams.code_challenge_method = config.pkceMethod;
+        authorizationParams.code_challenge = authRequest.codeChallenge;
+      }
+
+      const authorizationUrl = oidc.buildAuthorizationUrl(oidcConfiguration, authorizationParams).toString();
+      return res.redirect(authorizationUrl);
+    } catch (error) {
+      console.error('[auth] Error en /login:', error.message);
+      return res.redirect('/?message=Error%20iniciando%20login');
+    }
+  });
+
+  router.get('/auth/callback', async (req, res) => {
+    try {
+      const callbackError = typeof req.query.error === 'string' ? req.query.error : '';
+      const callbackErrorDescription = typeof req.query.error_description === 'string' ? req.query.error_description : '';
+
+      if (callbackError) {
+        const detail = callbackErrorDescription ? `${callbackError}: ${callbackErrorDescription}` : callbackError;
+        return res.redirect(`/?message=${encodeURIComponent(`Error en callback OIDC (${detail})`)}`);
+      }
+
+      const { oidcConfiguration, config } = await getOidcClient();
+      const checks = {
+        expectedState: req.session.oidc?.state,
+        expectedNonce: req.session.oidc?.nonce
+      };
+
+      if (config.usePkce) {
+        checks.pkceCodeVerifier = req.session.oidc?.codeVerifier;
+      }
+
+      const currentUrl = new URL(req.originalUrl, config.domain);
+      const tokenSet = await oidc.authorizationCodeGrant(oidcConfiguration, currentUrl, checks);
+      setSessionTokens(req, tokenSet);
+      return res.redirect('/tokens');
+    } catch (error) {
+      console.error('[auth] Error en callback OIDC:', error.message);
+      return res.redirect('/?message=Error%20en%20callback%20OIDC');
+    }
+  });
+
+  router.post('/logout', async (req, res) => {
+    clearSession(req);
+    return res.redirect('/');
+  });
+
+  router.use('/api', createApiRoutes());
 
   return router;
 }

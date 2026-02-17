@@ -1,11 +1,24 @@
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install --omit=dev
+COPY package.json package-lock.json ./
+RUN npm install
 
 COPY . .
+RUN npm run build:web
+
+FROM node:20-alpine AS runtime
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm install --omit=dev
+
+COPY src ./src
+COPY scripts ./scripts
+COPY config ./config
+COPY --from=builder /app/dist/web ./dist/web
 
 RUN if getent passwd 1000 >/dev/null 2>&1; then \
       APP_USER="$(getent passwd 1000 | cut -d: -f1)"; \

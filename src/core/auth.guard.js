@@ -5,6 +5,13 @@ function authGuard(req, res, next) {
     return next();
   }
 
+  if (req.path.startsWith('/api/')) {
+    return res.status(401).json({
+      error: 'unauthorized',
+      message: 'No hay sesión autenticada.'
+    });
+  }
+
   return res.redirect('/');
 }
 

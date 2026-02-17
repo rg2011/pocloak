@@ -1,18 +1,25 @@
 function routeMap() {
   return {
     public: [
-      'GET /',
       'GET /login',
       'GET /auth/callback',
-      'GET /config',
-      'POST /config/restart',
       'POST /logout',
-      'GET /discovery',
-      'GET /discovery/data',
-      'GET /discovery/uma2',
-      'GET /discovery/realm'
+      'GET /api/health',
+      'GET /api/auth/status',
+      'GET /api/config',
+      'POST /api/config',
+      'POST /api/config/restart',
+      'GET /api/discovery/data',
+      'GET /api/discovery/uma2',
+      'GET /api/discovery/realm'
     ],
-    protected: ['GET /tokens', 'GET /session', 'GET /oidc', 'GET /oidc/userinfo', 'GET /oidc/introspect', 'GET /oidc/uma']
+    protected: [
+      'GET /api/tokens',
+      'GET /api/session',
+      'GET /api/oidc/userinfo',
+      'GET /api/oidc/introspect',
+      'GET /api/oidc/uma'
+    ]
   };
 }
 

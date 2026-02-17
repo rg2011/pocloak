@@ -1,95 +1,74 @@
-# POCloak: Node + Keycloak (OIDC)
+# POCloak: Angular + Node + Keycloak (OIDC)
 
-POC didáctica para mostrar integración Node.js + Keycloak con flujo OIDC completo y estructura orientada al modelo mental de Angular (`core`, `features`, `routes`, `guard`, `interceptor`).
+POC didáctica para equipos Angular.
 
-## Stack actual
+Objetivo: enseñar el flujo OIDC end-to-end con una app Angular mínima y un backend Node (BFF) que guarda tokens en sesión servidor.
 
-- Node.js 20 + Express 4
-- `openid-client`
-- `express-session`
-- UI server-side HTML semántico + Bulma CDN (sin CSS custom)
+## Principios de esta POC
 
-## Estructura actual
+- Tutorial por encima de arquitectura enterprise.
+- Tokens sensibles fuera del DOM.
+- Sin toolkits UI extra: Bulma CDN + HTML semántico.
+- Separación clara entre frontend Angular y backend OIDC.
 
-- `src/core`
-  - `auth.service.js`: sesión de tokens, decode JWT, checks de refresh
-  - `auth.guard.js`: protección de rutas autenticadas
-  - `http.interceptor.js`: refresh automático por expiración
-  - `oidc.client.js`: discovery, cliente OIDC y PKCE/state/nonce
-- `src/features`
-  - `home`, `discovery`, `tokens`, `session`, `oidc`, `config` (vistas/controlador)
-- `src/server`
-  - `server.js`: arranque y logs
-  - `routes.js`: rutas públicas/protegidas
-  - `keycloak.config.js`: lectura/merge/persistencia de configuración
-- `config/oidc.config.json`: fichero editable en runtime
+## Arquitectura
 
-## Rutas
+- `web/`: SPA Angular standalone (router, guard, interceptor, páginas tutorial)
+- `src/`: backend Node/Express + `openid-client`
+- `config/oidc.config.json`: configuración editable en runtime
 
-Públicas:
+Flujo principal:
 
-- `GET /`
+1. Angular dispara `GET /login`.
+2. Keycloak autentica y redirige a `GET /auth/callback`.
+3. Backend intercambia código por tokens y los guarda en `express-session`.
+4. Angular consume endpoints en `/api/*` para inspeccionar requests/replies.
+
+## Endpoints
+
+Públicos:
+
+- `GET /api/health`
+- `GET /api/auth/status`
+- `GET /api/config`
+- `POST /api/config`
+- `POST /api/config/restart`
+- `GET /api/discovery/data`
+- `GET /api/discovery/realm`
+- `GET /api/discovery/uma2`
+
+Protegidos:
+
+- `GET /api/tokens`
+- `GET /api/session`
+- `GET /api/oidc/userinfo`
+- `GET /api/oidc/introspect`
+- `GET /api/oidc/uma`
+
+Auth control:
+
 - `GET /login`
 - `GET /auth/callback`
 - `POST /logout`
-- `GET /config`
-- `POST /config/restart` (guarda el JSON enviado, redirige a `/` y hace `process.exit(0)`)
-- `GET /discovery` (pantalla pública con tabs de metadata)
-- `GET /discovery/data` (llamada HTTP al OIDC discovery document)
-- `GET /discovery/uma2` (llamada HTTP a la well-known UMA2 del realm)
-- `GET /discovery/realm` (llamada HTTP a metadata pública del realm)
 
-Protegidas (`AuthGuard` + interceptor refresh):
+## Desarrollo local
 
-- `GET /tokens`
-- `GET /session`
-- `GET /oidc`
-- `GET /oidc/userinfo`
-- `GET /oidc/introspect`
-- `GET /oidc/uma`
-
-Separación funcional:
-
-- `Discovery` (público) se centra en metadata pública de Keycloak/realm.
-- `OIDC Endpoints` (protegido) se centra en llamadas que requieren access token de sesión.
-
-En `discovery`, `userinfo`, `introspect` y `uma` la respuesta incluye:
-
-- `request`: `url`, `method`, `headers`, `body`
-- `reply`: `http_code`, `headers`, `body`
-
-Los tokens se muestran ofuscados en los datos de llamada y en campos token-like de la respuesta.
-
-## Configuración OIDC
-
-Fuente de configuración (orden de precedencia):
-
-1. Variables de entorno (valores por defecto)
-2. Fichero JSON en `OIDC_CONFIG_PATH` (sobrescribe defaults)
-
-Variables soportadas:
-
-- `OIDC_DISCOVERY_URL`
-- `OIDC_CLIENT_ID`
-- `OIDC_CLIENT_SECRET`
-- `OIDC_USE_PKCE` (`true`/`false`)
-- `OIDC_PKCE_METHOD` (`S256`/`plain`)
-- `APP_DOMAIN` (base para `redirect_uri`)
-- `OIDC_SCOPE`
-- `OIDC_UMA_AUDIENCE`
-- `SESSION_SECRET`
-
-## Ejecución local
+Terminal 1 (backend):
 
 ```bash
 npm install
-cp .env.example .env
-npm start
+npm run start:api
 ```
 
-Abrir `http://localhost:3000`.
+Terminal 2 (frontend Angular):
 
-`npm start` usa `scripts/process-supervisor.js`, que vuelve a levantar el proceso cuando `/config/restart` hace `process.exit(0)`.
+```bash
+npm run dev:web
+```
+
+Abrir `http://localhost:4200`.
+
+El dev server Angular proxea `/api`, `/login`, `/auth/*`, `/logout` al backend en `:3000`.
 
 ## Docker
 
@@ -98,22 +77,30 @@ docker compose build
 docker compose up -d
 ```
 
-Detalles relevantes:
+En Docker, la imagen compila Angular en modo tutorial (`npm run build:web`: sin minificación y con sourcemaps) y Express sirve `dist/web` en `http://localhost:3000`.
 
-- `Dockerfile` crea usuario `appuser` (`uid=1000`, `gid=1000`, con home).
-- `docker-compose.yml` monta `./config:/app/config`.
-- `docker-compose.yml` usa `restart: unless-stopped`.
-- El contenedor se ejecuta como `1000:1000` para evitar conflictos de permisos en volumen host.
+## Configuración OIDC
 
-## Devcontainer
+Variables soportadas:
 
-- Configuración: `.devcontainer/devcontainer.json`
-- Guía: `.devcontainer/README.md`
-- Arranque automático: `npm run dev:container` (mismo supervisor de proceso que `npm start`)
+- `OIDC_DISCOVERY_URL`
+- `OIDC_CLIENT_ID`
+- `OIDC_CLIENT_SECRET`
+- `OIDC_USE_PKCE`
+- `OIDC_PKCE_METHOD`
+- `APP_DOMAIN`
+- `OIDC_SCOPE`
+- `OIDC_UMA_AUDIENCE`
+- `SESSION_SECRET`
 
-## Notas de seguridad de esta POC
+Persistencia editable:
 
-- El refresh token nunca se renderiza en DOM.
-- Los tokens se guardan en sesión server-side.
-- No se usa `localStorage`.
-- Esta implementación es didáctica y no pretende ser producción-ready.
+- fichero JSON en `OIDC_CONFIG_PATH` (por defecto `./config/oidc.config.json`)
+
+La configuración se guarda por API y se aplica tras `POST /api/config/restart`.
+
+## Seguridad didáctica
+
+- `refresh_token` no se renderiza en UI.
+- llamadas OIDC muestran request/reply saneados (tokens obfuscados).
+- no se usa `localStorage` para credenciales.
