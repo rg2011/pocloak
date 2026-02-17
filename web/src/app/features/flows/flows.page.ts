@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, signal } from '@angular/core';
-import { ACCESS_FLOW_DIAGRAM, LOGIN_FLOW_DIAGRAM, SPA_PKCE_FLOW_DIAGRAM } from '../home/swimlane.data';
+import { ACCESS_FLOW_DIAGRAM, CLIENT_CREDENTIALS_FLOW_DIAGRAM, LOGIN_FLOW_DIAGRAM, SPA_PKCE_FLOW_DIAGRAM } from '../home/swimlane.data';
 import { SwimlaneDiagramComponent } from '../../shared/swimlane-diagram.component';
 
 @Component({
@@ -19,6 +19,9 @@ import { SwimlaneDiagramComponent } from '../../shared/swimlane-diagram.componen
           </li>
           <li [class.is-active]="activeTab() === 'access-flow'">
             <a (click)="activeTab.set('access-flow')">Access flow (BFF)</a>
+          </li>
+          <li [class.is-active]="activeTab() === 'client-credentials-flow'">
+            <a (click)="activeTab.set('client-credentials-flow')">Client Credentials</a>
           </li>
           <li [class.is-active]="activeTab() === 'spa-pkce-flow'">
             <a (click)="activeTab.set('spa-pkce-flow')">SPA + PKCE (Public)</a>
@@ -85,6 +88,25 @@ import { SwimlaneDiagramComponent } from '../../shared/swimlane-diagram.componen
         </div>
       </div>
 
+      <div class="content" *ngIf="activeTab() === 'client-credentials-flow'">
+        <p>
+          <strong>Summary:</strong> Client Credentials is a machine-to-machine OAuth flow.
+          Browser and Angular do not participate in token exchange; backend authenticates directly as confidential client.
+        </p>
+        <div class="mt-4">
+          <app-swimlane-diagram [diagram]="clientCredentialsFlowDiagram"></app-swimlane-diagram>
+        </div>
+        <div class="mt-4">
+          <p><strong>Notes:</strong></p>
+          <ul>
+            <li>This app demonstrates it through <code>GET /client-login</code>.</li>
+            <li>Backend calls token endpoint with <code>grant_type=client_credentials</code> and client authentication.</li>
+            <li>Keycloak returns a service-account token (normally no user session in IdP login UI).</li>
+            <li>Tokens are still stored server-side in app session for inspection in this tutorial.</li>
+          </ul>
+        </div>
+      </div>
+
       <div class="content" *ngIf="activeTab() === 'spa-pkce-flow'">
         <p><strong>Summary:</strong> In a public client (SPA/mobile), there is no backend secret. PKCE protects authorization code exchange.</p>
         <div class="mt-4">
@@ -103,8 +125,9 @@ import { SwimlaneDiagramComponent } from '../../shared/swimlane-diagram.componen
   `
 })
 export class FlowsPageComponent {
-  readonly activeTab = signal<'summary' | 'login-flow' | 'access-flow' | 'spa-pkce-flow'>('summary');
+  readonly activeTab = signal<'summary' | 'login-flow' | 'access-flow' | 'spa-pkce-flow' | 'client-credentials-flow'>('summary');
   readonly loginFlowDiagram = LOGIN_FLOW_DIAGRAM;
   readonly accessFlowDiagram = ACCESS_FLOW_DIAGRAM;
   readonly spaPkceFlowDiagram = SPA_PKCE_FLOW_DIAGRAM;
+  readonly clientCredentialsFlowDiagram = CLIENT_CREDENTIALS_FLOW_DIAGRAM;
 }

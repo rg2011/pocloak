@@ -17,4 +17,5 @@ export interface AuthStatus {
   tokens: unknown;
   kcIdpHint: string | null;
   validatedIdp: string | null;
+  hasClientSecret: boolean;
 }

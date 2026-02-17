@@ -49,6 +49,13 @@ import { AuthService } from './core/auth.service';
             <div class="navbar-item">
               <div class="buttons">
                 <button class="button is-primary" (click)="openLoginModal()" *ngIf="!isAuthenticated()">Login</button>
+                <button
+                  class="button is-primary"
+                  (click)="authService.clientLogin()"
+                  *ngIf="!isAuthenticated() && supportsClientLogin()"
+                >
+                  Client Login
+                </button>
                 <button class="button is-danger is-outlined" (click)="authService.logout()" *ngIf="isAuthenticated()">Logout</button>
                 <span class="tag" [class.is-success]="isAuthenticated()" [class.is-warning]="!isAuthenticated()">
                   {{ isAuthenticated() ? authLabel() : 'Anonymous' }}
@@ -100,6 +107,7 @@ import { AuthService } from './core/auth.service';
 export class AppComponent {
   readonly authService = inject(AuthService);
   readonly isAuthenticated = computed(() => this.authService.authState().isAuthenticated);
+  readonly supportsClientLogin = computed(() => this.authService.authState().hasClientSecret);
   readonly authLabel = computed(() => {
     const authState = this.authService.authState();
     if (authState.validatedIdp) {

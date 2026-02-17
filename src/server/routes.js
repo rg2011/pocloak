@@ -166,11 +166,13 @@ function createApiRoutes() {
   });
 
   router.get('/auth/status', (req, res) => {
+    const runtimeConfig = loadRuntimeConfig();
     res.json({
       isAuthenticated: Boolean(req.session.auth),
       tokens: getSafeTokenView(req),
       kcIdpHint: req.session.oidc?.kcIdpHint || null,
-      validatedIdp: req.session.auth?.validatedIdp || null
+      validatedIdp: req.session.auth?.validatedIdp || null,
+      hasClientSecret: Boolean(runtimeConfig.clientSecret)
     });
   });
 
@@ -219,6 +221,31 @@ function createApiRoutes() {
 
   router.get('/tokens', (req, res) => {
     res.json(getSafeTokenView(req));
+  });
+
+  router.get('/tokens/access-token', (req, res) => {
+    const runtimeConfig = loadRuntimeConfig();
+    if (!runtimeConfig.enableRawTokenExport) {
+      return res.status(403).json({
+        error: 'raw_token_export_disabled',
+        error_description: 'Enable OIDC_ENABLE_RAW_TOKEN_EXPORT=true to use this training endpoint.'
+      });
+    }
+
+    const accessToken = req.session.auth?.accessToken;
+    if (!accessToken) {
+      return res.status(404).json({
+        error: 'missing_access_token',
+        error_description: 'No access token found in session.'
+      });
+    }
+
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'");
+    return res.send(accessToken);
   });
 
   router.get('/session', (req, res) => {
@@ -323,7 +350,7 @@ function createApiRoutes() {
     res.json(exchange);
   });
 
-  router.get('/oidc/token-exchange', async (req, res) => {
+  router.get('/oidc/idp-token', async (req, res) => {
     const { config } = await getOidcClient();
     const providerAlias = typeof req.session.oidc?.kcIdpHint === 'string' ? req.session.oidc.kcIdpHint.trim() : '';
     const realmBaseUrl = buildRealmBaseUrl(config.discoveryUrl);
@@ -433,6 +460,59 @@ function createAppRoutes() {
     } catch (error) {
       console.error('[auth] Error in OIDC callback:', error.message);
       return res.redirect('/?message=Error%20in%20OIDC%20callback');
+    }
+  });
+
+  router.get('/client-login', async (req, res) => {
+    try {
+      const { serverMetadata, config } = await getOidcClient();
+
+      if (!config.clientSecret) {
+        return res.redirect('/?message=Client%20credentials%20flow%20requires%20client%20secret');
+      }
+
+      const tokenEndpoint = serverMetadata.token_endpoint;
+      if (!tokenEndpoint) {
+        throw new Error('token_endpoint not found in discovery document');
+      }
+
+      // OAuth2 client credentials flow: authenticate as confidential client/service account.
+      const requestBody = toFormUrlEncoded({
+        grant_type: 'client_credentials',
+        scope: config.scope
+      });
+
+      const basicCredentials = Buffer.from(`${config.clientId}:${config.clientSecret}`).toString('base64');
+      const response = await fetch(tokenEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Accept: 'application/json',
+          Authorization: `Basic ${basicCredentials}`
+        },
+        body: requestBody
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`client_credentials failed (${response.status}): ${errorText}`);
+      }
+
+      const tokenSet = await response.json();
+      setSessionTokens(req, tokenSet, { trustedIdpClaim: config.trustedIdpClaim });
+      req.session.oidc = {
+        ...(req.session.oidc || {}),
+        kcIdpHint: null,
+        state: null,
+        nonce: null,
+        codeVerifier: null,
+        createdAt: Date.now()
+      };
+
+      return res.redirect('/tokens');
+    } catch (error) {
+      console.error('[auth] Error in /client-login:', error.message);
+      return res.redirect('/?message=Error%20in%20client%20credentials%20login');
     }
   });
 

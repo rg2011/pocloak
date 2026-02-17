@@ -13,6 +13,11 @@ const SPA_HEADERS = [
   { x: 1000, label: 'Keycloak' }
 ];
 
+const CLIENT_CREDENTIALS_HEADERS = [
+  { x: 300, label: 'Node Backend' },
+  { x: 900, label: 'Keycloak' }
+];
+
 export const LOGIN_FLOW_DIAGRAM: SwimlaneDiagram = {
   viewBox: '0 0 1200 760',
   ariaLabel: 'OIDC login flow with BFF architecture',
@@ -20,17 +25,17 @@ export const LOGIN_FLOW_DIAGRAM: SwimlaneDiagram = {
   laneDividers: [150, 450, 750, 1050],
   headers: BFF_HEADERS,
   arrows: [
-    'M265 100 H450 V130',
-    'M335 155 H150 V185',
-    'M265 210 H750 V240',
-    'M635 265 H150 V295',
-    'M265 320 H1050 V350',
-    'M935 375 H150 V405',
-    'M265 430 H750 V460',
-    'M865 485 H1050 V515',
-    'M935 540 H750 V570',
-    'M635 595 H150 V625',
-    'M265 650 H450 V680'
+    'M265 102 H450',
+    'M335 157 H150',
+    'M265 212 H750',
+    'M635 267 H150',
+    'M265 322 H1050',
+    'M935 377 H150',
+    'M265 432 H750',
+    'M865 487 H1050',
+    'M935 542 H750',
+    'M635 597 H150',
+    'M265 652 H450'
   ],
   steps: [
     { x: 35, y: 80, text: '1. Browse login page' },
@@ -57,16 +62,14 @@ export const ACCESS_FLOW_DIAGRAM: SwimlaneDiagram = {
   laneDividers: [150, 450, 750, 1050],
   headers: BFF_HEADERS,
   arrows: [
-    'M265 100 H450 V130',
-    'M565 155 H750 V185',
-    'M635 210 H450 V240',
-    'M450 290 V295',
-    'M450 345 V350',
-    'M565 375 H750 V405',
-    'M865 430 H1050 V460',
-    'M935 485 H750 V515',
-    'M635 540 H450 V570',
-    'M335 595 H150 V625'
+    'M265 102 H450',
+    'M565 157 H750',
+    'M635 212 H450',
+    'M565 377 H750',
+    'M865 432 H1050',
+    'M935 487 H750',
+    'M635 542 H450',
+    'M335 597 H150'
   ],
   steps: [
     { x: 35, y: 80, text: '1. Open /oidc (protected route)' },
@@ -91,15 +94,13 @@ export const SPA_PKCE_FLOW_DIAGRAM: SwimlaneDiagram = {
   laneDividers: [200, 600, 1000],
   headers: SPA_HEADERS,
   arrows: [
-    'M315 100 H600 V130',
-    'M485 155 H200 V185',
-    'M315 210 H1000 V240',
-    'M885 265 H200 V295',
-    'M315 320 H600 V350',
-    'M715 375 H1000 V405',
-    'M885 430 H600 V460',
-    'M600 490 V495',
-    'M600 545 V550'
+    'M370 102 H600',
+    'M430 157 H200',
+    'M370 212 H1000',
+    'M830 267 H200',
+    'M370 322 H600',
+    'M770 377 H1000',
+    'M830 432 H600'
   ],
   steps: [
     { x: 30, y: 80, width: 340, text: '1. Open SPA in browser' },
@@ -113,5 +114,23 @@ export const SPA_PKCE_FLOW_DIAGRAM: SwimlaneDiagram = {
     // Tokens live in browser runtime in SPA/public-client architecture.
     { x: 430, y: 465, width: 340, text: '8. SPA stores tokens in browser runtime' },
     { x: 430, y: 520, width: 340, text: '9. SPA calls APIs with access token' }
+  ]
+};
+
+export const CLIENT_CREDENTIALS_FLOW_DIAGRAM: SwimlaneDiagram = {
+  viewBox: '0 0 1200 420',
+  ariaLabel: 'Client credentials flow with backend confidential client',
+  markerId: 'arrow-client-credentials',
+  laneDividers: [300, 900],
+  headers: CLIENT_CREDENTIALS_HEADERS,
+  arrows: [
+    'M450 117 H900',
+    'M750 237 H300'
+  ],
+  steps: [
+    { x: 150, y: 95, width: 300, text: '1. Trigger client login in backend' },
+    { x: 750, y: 155, width: 300, text: '2. POST token (client_credentials)' },
+    { x: 750, y: 215, width: 300, text: '3. Return service-account token' },
+    { x: 150, y: 275, width: 300, text: '4. Save session token' }
   ]
 };

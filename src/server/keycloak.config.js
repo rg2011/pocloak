@@ -24,7 +24,11 @@ function loadRuntimeConfig() {
     umaAudience: process.env.OIDC_UMA_AUDIENCE || '',
 
     // Optional access-token claim used as trusted IdP source (for example: identity_provider)
-    trustedIdpClaim: process.env.OIDC_TRUSTED_IDP_CLAIM || ''
+    trustedIdpClaim: process.env.OIDC_TRUSTED_IDP_CLAIM || '',
+
+    // Training-only flag: allows exporting raw access token from backend.
+    // Keep disabled by default.
+    enableRawTokenExport: (process.env.OIDC_ENABLE_RAW_TOKEN_EXPORT || 'false').toLowerCase() === 'true'
   };
 }
 

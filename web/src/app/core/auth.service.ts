@@ -5,7 +5,13 @@ import { AuthStatus } from './api.types';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  readonly authState = signal<AuthStatus>({ isAuthenticated: false, tokens: null, kcIdpHint: null, validatedIdp: null });
+  readonly authState = signal<AuthStatus>({
+    isAuthenticated: false,
+    tokens: null,
+    kcIdpHint: null,
+    validatedIdp: null,
+    hasClientSecret: false
+  });
 
   constructor(private readonly http: HttpClient) {}
 
@@ -19,6 +25,10 @@ export class AuthService {
     const trimmedHint = (idpHint ?? '').trim();
     const loginUrl = trimmedHint.length > 0 ? `/login?kc_idp_hint=${encodeURIComponent(trimmedHint)}` : '/login';
     window.location.href = loginUrl;
+  }
+
+  clientLogin(): void {
+    window.location.href = '/client-login';
   }
 
   logout(): void {

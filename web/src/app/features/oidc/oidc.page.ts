@@ -25,8 +25,8 @@ import { EndpointTabSpec, fetchEndpointTab } from '../../shared/endpoint-tab.hel
           <li [class.is-active]="activeTab() === 'uma'">
             <a (click)="selectTab('uma')">UMA</a>
           </li>
-          <li [class.is-active]="activeTab() === 'token-exchange'">
-            <a (click)="selectTab('token-exchange')">Token Exchange</a>
+          <li [class.is-active]="activeTab() === 'idp-token'">
+            <a (click)="selectTab('idp-token')">IdP Token</a>
           </li>
         </ul>
       </div>
@@ -47,8 +47,14 @@ import { EndpointTabSpec, fetchEndpointTab } from '../../shared/endpoint-tab.hel
             <a href="https://www.keycloak.org/docs/latest/authorization_services/" target="_blank" rel="noreferrer">Keycloak Authorization Services</a>.
           </li>
           <li>
-            <strong>Token exchange:</strong> asks Keycloak broker endpoint for the original external IdP token using <code>kcIdpHint</code> stored in session.
+            <strong>IdP Token:</strong> asks Keycloak broker endpoint for the original external IdP token using <code>kcIdpHint</code> stored in session.
             <a href="https://www.keycloak.org/docs/latest/server_admin/#retrieving-external-idp-tokens" target="_blank" rel="noreferrer">Retrieving external IdP tokens</a>.
+          </li>
+          <li>
+            <strong>Cross-realm exchange note:</strong> exchanging a token from one realm into another realm currently requires either legacy token exchange
+            or JWT Authorization Grant. Legacy token exchange is deprecated and feature-gated; JWT Authorization Grant is also feature-gated.
+            <a href="https://www.keycloak.org/securing-apps/token-exchange" target="_blank" rel="noreferrer">Token Exchange docs</a>.
+            <a href="https://www.keycloak.org/securing-apps/jwt-authorization-grant" target="_blank" rel="noreferrer">JWT Authorization Grant docs</a>.
           </li>
         </ul>
       </div>
@@ -65,18 +71,18 @@ import { EndpointTabSpec, fetchEndpointTab } from '../../shared/endpoint-tab.hel
 })
 export class OidcPageComponent {
   private readonly http = inject(HttpClient);
-  private readonly endpointByTab: Record<'userinfo' | 'introspect' | 'uma' | 'token-exchange', EndpointTabSpec> = {
+  private readonly endpointByTab: Record<'userinfo' | 'introspect' | 'uma' | 'idp-token', EndpointTabSpec> = {
     userinfo: { url: '/api/oidc/userinfo', title: 'Userinfo' },
     introspect: { url: '/api/oidc/introspect', title: 'Introspect' },
     uma: { url: '/api/oidc/uma', title: 'UMA Ticket' },
-    'token-exchange': { url: '/api/oidc/token-exchange', title: 'Token Exchange (External IdP Token)' }
+    'idp-token': { url: '/api/oidc/idp-token', title: 'External IdP Token (Broker API)' }
   };
-  readonly activeTab = signal<'summary' | 'userinfo' | 'introspect' | 'uma' | 'token-exchange'>('summary');
+  readonly activeTab = signal<'summary' | 'userinfo' | 'introspect' | 'uma' | 'idp-token'>('summary');
   readonly exchange = signal<HttpExchange | null>(null);
   readonly title = signal('');
   readonly error = signal('');
 
-  async selectTab(tab: 'summary' | 'userinfo' | 'introspect' | 'uma' | 'token-exchange'): Promise<void> {
+  async selectTab(tab: 'summary' | 'userinfo' | 'introspect' | 'uma' | 'idp-token'): Promise<void> {
     this.activeTab.set(tab);
 
     if (tab === 'summary') {

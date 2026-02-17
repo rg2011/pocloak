@@ -67,15 +67,17 @@ Public:
 Protected:
 
 - `GET /api/tokens`
+- `GET /api/tokens/access-token` (training-only raw access token export; disabled by default)
 - `GET /api/session`
 - `GET /api/oidc/userinfo`
 - `GET /api/oidc/introspect`
 - `GET /api/oidc/uma`
-- `GET /api/oidc/token-exchange`
+- `GET /api/oidc/idp-token`
 
 Auth control:
 
 - `GET /login`
+- `GET /client-login` (client credentials/service account)
 - `GET /auth/callback`
 - `POST /logout`
 
@@ -96,13 +98,13 @@ npm run dev:web
 
 Open `http://localhost:4200`.
 
-Angular dev server proxies `/api`, `/login`, `/auth/*`, and `/logout` to backend at `:3000`.
+Angular dev server proxies `/api`, `/login`, `/client-login`, `/auth/*`, and `/logout` to backend at `:3000`.
 
 ## Docker
 
 ```bash
 docker compose build
-docker compose up -d
+docker compose --env-file .env up -d
 ```
 
 In Docker, image builds Angular in tutorial mode (`npm run build:web`: non-minified + sourcemaps) and Express serves `dist/web` at `http://localhost:3000`.
@@ -120,6 +122,7 @@ Configuration is loaded from environment variables:
 - `OIDC_SCOPE`
 - `OIDC_UMA_AUDIENCE`
 - `OIDC_TRUSTED_IDP_CLAIM`
+- `OIDC_ENABLE_RAW_TOKEN_EXPORT` (training-only, default `false`)
 - `SESSION_SECRET`
 
 `OIDC_TRUSTED_IDP_CLAIM` is optional. If set, backend reads that claim path from the **access token** and stores it in session as trusted IdP (`validatedIdp`).
@@ -144,6 +147,7 @@ To configure:
 
 - `refresh_token` is never sent to the browser (stored only in server-side session).
 - OIDC request/reply payloads are sanitized before display (tokens obfuscated).
+- Raw access token export endpoint is optional and disabled by default (`OIDC_ENABLE_RAW_TOKEN_EXPORT=false`).
 - No credentials in `localStorage` or browser storage.
 - JWT tokens decoded for display only (not verified - teaching purpose).
 - Inline comments mark security-critical code sections.

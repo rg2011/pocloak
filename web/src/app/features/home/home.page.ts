@@ -75,6 +75,10 @@ import { firstValueFrom } from 'rxjs';
               <th>Trusted IdP Claim</th>
               <td><code>{{ config().trustedIdpClaim || '(not set)' }}</code></td>
             </tr>
+            <tr>
+              <th>Raw Token Export (training)</th>
+              <td><code>{{ config().enableRawTokenExport }}</code></td>
+            </tr>
           </tbody>
         </table>
 

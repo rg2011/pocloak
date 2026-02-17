@@ -2,6 +2,7 @@ function routeMap() {
   return {
     public: [
       'GET /login',
+      'GET /client-login',
       'GET /auth/callback',
       'POST /logout',
       'GET /api/health',
@@ -13,10 +14,12 @@ function routeMap() {
     ],
     protected: [
       'GET /api/tokens',
+      'GET /api/tokens/access-token',
       'GET /api/session',
       'GET /api/oidc/userinfo',
       'GET /api/oidc/introspect',
-      'GET /api/oidc/uma'
+      'GET /api/oidc/uma',
+      'GET /api/oidc/idp-token'
     ]
   };
 }
