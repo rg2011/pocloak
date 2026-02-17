@@ -90,15 +90,19 @@ import { firstValueFrom } from 'rxjs';
             Main route navigation:
             <code>home</code>, <code>flows</code>, <code>discovery</code>, <code>oidc</code>, <code>tokens</code>, <code>session</code>.
           </li>
-          <li><code>AuthGuard</code> protects private routes by checking backend session state.</li>
-          <li><code>HttpInterceptor</code> handles <code>401</code> and navigates back to home/login.</li>
+          <li>
+            <a href="https://angular.dev/api/router/CanActivateFn" target="_blank" rel="noreferrer">AuthGuard</a> protects private routes by checking backend session state.
+          </li>
+          <li>
+            <a href="https://angular.dev/api/common/http/HttpInterceptorFn" target="_blank" rel="noreferrer">HttpInterceptor</a> handles <code>401</code> and navigates back to home/login.
+          </li>
           <li>Reusable HTTP inspector component shows request/reply payloads for OIDC endpoints.</li>
-          <li>UI stays intentionally simple: semantic HTML + Bulma, no custom CSS layers.</li>
+          <li>UI stays intentionally simple: semantic HTML + <a href="https://bulma.io/" target="_blank" rel="noreferrer">Bulma</a>, no custom CSS layers.</li>
         </ul>
       </div>
 
       <div class="content" *ngIf="activeTab() === 'backend'">
-        <p><strong>Stack:</strong> Node 20 + Express + express-session + openid-client.</p>
+        <p><strong>Stack:</strong> Node 20 + <a href="https://expressjs.com/" target="_blank" rel="noreferrer">Express</a> + <a href="https://github.com/expressjs/session" target="_blank" rel="noreferrer">express-session</a> + <a href="https://github.com/panva/openid-client" target="_blank" rel="noreferrer">openid-client</a>.</p>
         <ul>
           <li>BFF architecture with server-side tokens: browser never receives refresh token.</li>
           <li>Public APIs under <code>/api</code> for discovery, config, and auth status.</li>

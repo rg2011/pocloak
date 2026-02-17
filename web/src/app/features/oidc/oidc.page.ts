@@ -32,15 +32,15 @@ import { EndpointTabSpec, fetchEndpointTab } from '../../shared/endpoint-tab.hel
         <p>This page contains protected endpoints that require an authenticated session and valid access token.</p>
         <ul>
           <li>
-            <strong><a (click)="selectTab('userinfo')">Userinfo</a>:</strong> reads user claims for the authenticated subject using bearer token.
+            <strong>Userinfo:</strong> reads user claims for the authenticated subject using bearer token.
             <a href="https://openid.net/specs/openid-connect-core-1_0.html#UserInfo" target="_blank" rel="noreferrer">OIDC UserInfo</a>.
           </li>
           <li>
-            <strong><a (click)="selectTab('introspect')">Introspect</a>:</strong> validates token state/claims against the authorization server.
+            <strong>Introspect:</strong> validates token state/claims against the authorization server.
             <a href="https://datatracker.ietf.org/doc/html/rfc7662" target="_blank" rel="noreferrer">RFC 7662 Token Introspection</a>.
           </li>
           <li>
-            <strong><a (click)="selectTab('uma')">UMA</a>:</strong> requests authorization ticket/decision using UMA grant.
+            <strong>UMA:</strong> requests authorization ticket/decision using UMA grant.
             <a href="https://www.keycloak.org/docs/latest/authorization_services/" target="_blank" rel="noreferrer">Keycloak Authorization Services</a>.
           </li>
         </ul>

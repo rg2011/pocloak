@@ -32,15 +32,15 @@ import { EndpointTabSpec, fetchEndpointTab } from '../../shared/endpoint-tab.hel
         <p>This page groups public realm metadata endpoints and authorization-capability discovery endpoints.</p>
         <ul>
           <li>
-            <strong><a (click)="selectTab('discovery')">Discovery</a>:</strong> fetches the OIDC well-known document with issuer capabilities and endpoints.
+            <strong>Discovery:</strong> fetches the OIDC well-known document with issuer capabilities and endpoints.
             <a href="https://openid.net/specs/openid-connect-discovery-1_0.html" target="_blank" rel="noreferrer">OIDC Discovery spec</a>.
           </li>
           <li>
-            <strong><a (click)="selectTab('realm')">Realm</a>:</strong> reads public realm metadata derived from the discovery URL.
+            <strong>Realm:</strong> reads public realm metadata derived from the discovery URL.
             <a href="https://www.keycloak.org/securing-apps/oidc-layers" target="_blank" rel="noreferrer">Keycloak OIDC layers</a>.
           </li>
           <li>
-            <strong><a (click)="selectTab('uma2')">UMA2</a>:</strong> reads UMA2 well-known metadata for authorization and policy capabilities.
+            <strong>UMA2:</strong> reads UMA2 well-known metadata for authorization and policy capabilities.
             <a href="https://www.keycloak.org/docs/latest/authorization_services/" target="_blank" rel="noreferrer">Keycloak Authorization Services</a>.
           </li>
         </ul>
