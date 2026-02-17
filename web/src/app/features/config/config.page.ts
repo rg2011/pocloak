@@ -10,7 +10,7 @@ import { firstValueFrom } from 'rxjs';
   template: `
     <article class="box">
       <h2 class="title is-5">Runtime Config</h2>
-      <p class="mb-3">Edita la configuración OIDC y fuerza reinicio controlado del proceso.</p>
+      <p class="mb-3">Edit OIDC runtime configuration and trigger a controlled process restart.</p>
 
       <div class="field">
         <label class="label">Config JSON</label>
@@ -47,7 +47,7 @@ export class ConfigPageComponent {
       const response = await firstValueFrom(this.http.get<{ rawConfig: unknown }>('/api/config'));
       this.configJson = JSON.stringify(response.rawConfig || {}, null, 2);
     } catch (error) {
-      this.error.set('No se pudo cargar configuración.');
+      this.error.set('Could not load configuration.');
     } finally {
       this.loading.set(false);
     }
@@ -60,9 +60,9 @@ export class ConfigPageComponent {
       this.message.set('');
       const payload = JSON.parse(this.configJson);
       await firstValueFrom(this.http.post('/api/config', payload));
-      this.message.set('Configuración guardada.');
+      this.message.set('Configuration saved.');
     } catch (error) {
-      this.error.set('JSON inválido o error al guardar configuración.');
+      this.error.set('Invalid JSON or save error.');
     } finally {
       this.loading.set(false);
     }
@@ -86,9 +86,9 @@ export class ConfigPageComponent {
         }
       }
 
-      this.error.set('No hubo respuesta del servidor tras reinicio.');
+      this.error.set('No server response after restart.');
     } catch (error) {
-      this.error.set('No se pudo solicitar el reinicio.');
+      this.error.set('Could not request restart.');
     } finally {
       this.loading.set(false);
     }

@@ -29,18 +29,18 @@ import { EndpointInspectorComponent } from '../../shared/endpoint-inspector.comp
       </div>
 
       <div class="content" *ngIf="activeTab() === 'summary'">
-        <p>Esta página agrupa endpoints públicos de metadata del realm y capacidades de autorización.</p>
+        <p>This page groups public realm metadata endpoints and authorization-capability discovery endpoints.</p>
         <ul>
           <li>
-            <strong>Discovery:</strong> obtiene el documento OIDC well-known con endpoints y capacidades del issuer.
+            <strong>Discovery:</strong> fetches the OIDC well-known document with issuer capabilities and endpoints.
             <a href="https://openid.net/specs/openid-connect-discovery-1_0.html" target="_blank" rel="noreferrer">OIDC Discovery spec</a>.
           </li>
           <li>
-            <strong>Realm:</strong> consulta metadata pública del realm derivada desde la URL discovery.
+            <strong>Realm:</strong> reads public realm metadata derived from the discovery URL.
             <a href="https://www.keycloak.org/securing-apps/oidc-layers" target="_blank" rel="noreferrer">Keycloak OIDC layers</a>.
           </li>
           <li>
-            <strong>UMA2:</strong> consulta la well-known UMA2 para capacidades de autorización y policy.
+            <strong>UMA2:</strong> reads UMA2 well-known metadata for authorization and policy capabilities.
             <a href="https://www.keycloak.org/docs/latest/authorization_services/" target="_blank" rel="noreferrer">Keycloak Authorization Services</a>.
           </li>
         </ul>
@@ -90,7 +90,7 @@ export class DiscoveryPageComponent {
       const response = await firstValueFrom(this.http.get<HttpExchange>(url));
       this.exchange.set(response);
     } catch (error) {
-      this.error.set('Error llamando endpoint público.');
+      this.error.set('Error while calling public endpoint.');
     }
   }
 }

@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { AuthService } from '../../core/auth.service';
 
 @Component({
   standalone: true,
@@ -12,7 +11,7 @@ import { AuthService } from '../../core/auth.service';
     </article>
 
     <article class="box">
-      <h2 class="title is-5 mb-4">Flujo OIDC</h2>
+      <h2 class="title is-5 mb-4">OIDC Flow</h2>
       <div class="tabs is-boxed mb-4">
         <ul>
           <li [class.is-active]="activeTab() === 'login-flow'">
@@ -34,7 +33,7 @@ import { AuthService } from '../../core/auth.service';
       </div>
 
       <div class="content" *ngIf="activeTab() === 'login-flow'">
-        <p><strong>Resumen:</strong> Angular no maneja tokens OIDC directamente. El backend Node gestiona login/callback/sesión.</p>
+        <p><strong>Summary:</strong> Angular does not handle OIDC tokens directly. The Node backend owns login/callback/session.</p>
         <div class="mt-4">
           <svg viewBox="0 0 1200 760" role="img" aria-label="OIDC swimlane Browser Angular Backend Keycloak" style="width: 100%; height: auto;">
             <line x1="300" y1="50" x2="300" y2="740" stroke="#dbdbdb"></line>
@@ -107,17 +106,17 @@ import { AuthService } from '../../core/auth.service';
           </svg>
         </div>
         <div class="mt-4">
-          <p><strong>Notas:</strong></p>
+          <p><strong>Notes:</strong></p>
           <ul>
-            <li>Tokens reales se guardan solo en sesión del backend.</li>
-            <li>Angular consulta estado vía <code>/api/auth/status</code> y consume APIs protegidas.</li>
-            <li>Keycloak nunca es llamado directamente desde Angular en este flujo.</li>
+            <li>Real tokens are stored only in backend session state.</li>
+            <li>Angular checks auth state via <code>/api/auth/status</code> and consumes protected APIs.</li>
+            <li>Angular never calls Keycloak directly in this flow.</li>
           </ul>
         </div>
       </div>
 
       <div class="content" *ngIf="activeTab() === 'access-flow'">
-        <p><strong>Resumen:</strong> al entrar en rutas protegidas, Angular valida sesión y backend valida/renueva token antes de llamar a Keycloak.</p>
+        <p><strong>Summary:</strong> for protected routes, Angular validates session state and backend validates/refreshes token before calling Keycloak.</p>
         <div class="mt-4">
           <svg viewBox="0 0 1200 720" role="img" aria-label="Protected access swimlane Browser Angular Backend Keycloak" style="width: 100%; height: auto;">
             <line x1="300" y1="50" x2="300" y2="700" stroke="#dbdbdb"></line>
@@ -186,11 +185,11 @@ import { AuthService } from '../../core/auth.service';
           </svg>
         </div>
         <div class="mt-4">
-          <p><strong>Notas:</strong></p>
+          <p><strong>Notes:</strong></p>
           <ul>
-            <li>Si no hay sesión, Angular no entra en la ruta protegida y redirige a Home.</li>
-            <li>Al llamar <code>/api/oidc/*</code>, backend aplica <code>authGuard</code> y luego refresh automático si toca.</li>
-            <li>Si refresh funciona, backend actualiza sesión y continúa la llamada a Keycloak.</li>
+            <li>If no session exists, Angular blocks the protected route and redirects to Home.</li>
+            <li>When calling <code>/api/oidc/*</code>, backend applies <code>authGuard</code> and then refresh middleware when needed.</li>
+            <li>If refresh succeeds, backend updates the session and continues the Keycloak call.</li>
           </ul>
         </div>
       </div>
@@ -199,35 +198,35 @@ import { AuthService } from '../../core/auth.service';
         <p><strong>Stack:</strong> Angular standalone + Router + HttpClient + Bulma (CDN).</p>
         <ul>
           <li>
-            Navegación principal por rutas:
+            Main route navigation:
             <code>home</code>, <code>discovery</code>, <code>oidc</code>, <code>tokens</code>, <code>session</code>,
             <code>config</code>.
           </li>
-          <li><code>AuthGuard</code> en rutas privadas para validar sesión backend antes de entrar.</li>
-          <li><code>HttpInterceptor</code> para capturar <code>401</code> y volver a home/login.</li>
-          <li>Componente reutilizable de inspección HTTP para request/reply de endpoints OIDC.</li>
-          <li>UI deliberadamente simple: semántica HTML + componentes Bulma sin CSS custom.</li>
+          <li><code>AuthGuard</code> protects private routes by checking backend session state.</li>
+          <li><code>HttpInterceptor</code> handles <code>401</code> and navigates back to home/login.</li>
+          <li>Reusable HTTP inspector component shows request/reply payloads for OIDC endpoints.</li>
+          <li>UI stays intentionally simple: semantic HTML + Bulma, no custom CSS layers.</li>
         </ul>
       </div>
 
       <div class="content" *ngIf="activeTab() === 'backend'">
         <p><strong>Stack:</strong> Node 20 + Express + express-session + openid-client.</p>
         <ul>
-          <li>BFF con tokens en sesión servidor: el browser no recibe refresh token.</li>
-          <li>Rutas API públicas bajo <code>/api</code> para discovery, config y estado de auth.</li>
-          <li>Rutas API protegidas con guard + refresh interceptor server-side.</li>
-          <li><code>/api/config</code> guarda JSON de configuración; <code>/api/config/restart</code> reinicia proceso.</li>
-          <li>Sanitización de datos sensibles en headers/cuerpos antes de mostrarlos en UI.</li>
+          <li>BFF architecture with server-side tokens: browser never receives refresh token.</li>
+          <li>Public APIs under <code>/api</code> for discovery, config, and auth status.</li>
+          <li>Protected APIs use backend guard + server-side refresh middleware.</li>
+          <li><code>/api/config</code> saves JSON config; <code>/api/config/restart</code> restarts the process.</li>
+          <li>Sensitive fields are sanitized before returning data to the UI.</li>
         </ul>
       </div>
 
       <div class="content" *ngIf="activeTab() === 'keycloak'">
         <ul>
-          <li>Configura el cliente con redirect URI apuntando a <code>/auth/callback</code>.</li>
-          <li>Si no hay <code>clientSecret</code>, la app usa auth method <code>none</code>.</li>
-          <li>Con <code>clientSecret</code>, se usa <code>client_secret_basic</code> en token/introspect.</li>
-          <li>La llamada UMA depende de permisos reales y audience configurada en Keycloak.</li>
-          <li>Si cambia <code>discoveryUrl</code>, revisa que incluya <code>/.well-known/</code> para derivar realm metadata.</li>
+          <li>Configure your client redirect URI to point to <code>/auth/callback</code>.</li>
+          <li>If no <code>clientSecret</code> is provided, auth method is <code>none</code>.</li>
+          <li>With <code>clientSecret</code>, backend uses <code>client_secret_basic</code> for token/introspect calls.</li>
+          <li>UMA behavior depends on real permissions and configured audience in Keycloak.</li>
+          <li>If <code>discoveryUrl</code> changes, keep <code>/.well-known/</code> so realm metadata can be derived.</li>
         </ul>
       </div>
     </article>
@@ -235,7 +234,6 @@ import { AuthService } from '../../core/auth.service';
 })
 export class HomePageComponent {
   private readonly route = inject(ActivatedRoute);
-  readonly authService = inject(AuthService);
   readonly message = computed(() => this.route.snapshot.queryParamMap.get('message') || '');
   readonly activeTab = signal<'login-flow' | 'access-flow' | 'frontend' | 'backend' | 'keycloak'>('login-flow');
 }

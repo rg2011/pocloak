@@ -29,18 +29,18 @@ import { EndpointInspectorComponent } from '../../shared/endpoint-inspector.comp
       </div>
 
       <div class="content" *ngIf="activeTab() === 'summary'">
-        <p>Esta página contiene endpoints protegidos que requieren sesión autenticada y access token válido.</p>
+        <p>This page contains protected endpoints that require an authenticated session and valid access token.</p>
         <ul>
           <li>
-            <strong>Userinfo:</strong> consulta claims del usuario autenticado usando bearer token.
+            <strong>Userinfo:</strong> reads user claims for the authenticated subject using bearer token.
             <a href="https://openid.net/specs/openid-connect-core-1_0.html#UserInfo" target="_blank" rel="noreferrer">OIDC UserInfo</a>.
           </li>
           <li>
-            <strong>Introspect:</strong> valida estado/claims de un token en el authorization server.
+            <strong>Introspect:</strong> validates token state/claims against the authorization server.
             <a href="https://datatracker.ietf.org/doc/html/rfc7662" target="_blank" rel="noreferrer">RFC 7662 Token Introspection</a>.
           </li>
           <li>
-            <strong>UMA:</strong> solicita ticket/decision de autorización con grant UMA.
+            <strong>UMA:</strong> requests authorization ticket/decision using UMA grant.
             <a href="https://www.keycloak.org/docs/latest/authorization_services/" target="_blank" rel="noreferrer">Keycloak Authorization Services</a>.
           </li>
         </ul>
@@ -90,7 +90,7 @@ export class OidcPageComponent {
       const response = await firstValueFrom(this.http.get<HttpExchange>(url));
       this.exchange.set(response);
     } catch (error) {
-      this.error.set('Error llamando endpoint protegido. ¿Hay sesión activa?');
+      this.error.set('Error while calling protected endpoint. Is session active?');
     }
   }
 }

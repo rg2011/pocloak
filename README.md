@@ -1,32 +1,32 @@
 # POCloak: Angular + Node + Keycloak (OIDC)
 
-POC didáctica para equipos Angular.
+Educational proof of concept for Angular teams.
 
-Objetivo: enseñar el flujo OIDC end-to-end con una app Angular mínima y un backend Node (BFF) que guarda tokens en sesión servidor.
+Goal: show an end-to-end OIDC flow with a minimal Angular app and a Node BFF that keeps tokens in server-side session.
 
-## Principios de esta POC
+## Principles
 
-- Tutorial por encima de arquitectura enterprise.
-- Tokens sensibles fuera del DOM.
-- Sin toolkits UI extra: Bulma CDN + HTML semántico.
-- Separación clara entre frontend Angular y backend OIDC.
+- Tutorial clarity over enterprise architecture.
+- Sensitive tokens never exposed in the DOM.
+- No extra UI toolkit: Bulma CDN + semantic HTML.
+- Clear split between Angular frontend and Node OIDC backend.
 
-## Arquitectura
+## Architecture
 
-- `web/`: SPA Angular standalone (router, guard, interceptor, páginas tutorial)
-- `src/`: backend Node/Express + `openid-client`
-- `config/oidc.config.json`: configuración editable en runtime
+- `web/`: Angular standalone SPA (router, guard, interceptor, tutorial pages)
+- `src/`: Node/Express backend + `openid-client`
+- `config/oidc.config.json`: runtime-editable OIDC config
 
-Flujo principal:
+Main flow:
 
-1. Angular dispara `GET /login`.
-2. Keycloak autentica y redirige a `GET /auth/callback`.
-3. Backend intercambia código por tokens y los guarda en `express-session`.
-4. Angular consume endpoints en `/api/*` para inspeccionar requests/replies.
+1. Angular triggers `GET /login`.
+2. Keycloak authenticates and redirects to `GET /auth/callback`.
+3. Backend exchanges code for tokens and stores them in `express-session`.
+4. Angular calls `/api/*` endpoints to inspect requests and replies.
 
 ## Endpoints
 
-Públicos:
+Public:
 
 - `GET /api/health`
 - `GET /api/auth/status`
@@ -37,7 +37,7 @@ Públicos:
 - `GET /api/discovery/realm`
 - `GET /api/discovery/uma2`
 
-Protegidos:
+Protected:
 
 - `GET /api/tokens`
 - `GET /api/session`
@@ -51,7 +51,7 @@ Auth control:
 - `GET /auth/callback`
 - `POST /logout`
 
-## Desarrollo local
+## Local Development
 
 Terminal 1 (backend):
 
@@ -66,9 +66,9 @@ Terminal 2 (frontend Angular):
 npm run dev:web
 ```
 
-Abrir `http://localhost:4200`.
+Open `http://localhost:4200`.
 
-El dev server Angular proxea `/api`, `/login`, `/auth/*`, `/logout` al backend en `:3000`.
+Angular dev server proxies `/api`, `/login`, `/auth/*`, and `/logout` to backend at `:3000`.
 
 ## Docker
 
@@ -77,11 +77,11 @@ docker compose build
 docker compose up -d
 ```
 
-En Docker, la imagen compila Angular en modo tutorial (`npm run build:web`: sin minificación y con sourcemaps) y Express sirve `dist/web` en `http://localhost:3000`.
+In Docker, image builds Angular in tutorial mode (`npm run build:web`: non-minified + sourcemaps) and Express serves `dist/web` at `http://localhost:3000`.
 
-## Configuración OIDC
+## OIDC Configuration
 
-Variables soportadas:
+Supported env vars:
 
 - `OIDC_DISCOVERY_URL`
 - `OIDC_CLIENT_ID`
@@ -93,14 +93,14 @@ Variables soportadas:
 - `OIDC_UMA_AUDIENCE`
 - `SESSION_SECRET`
 
-Persistencia editable:
+Persisted runtime config:
 
-- fichero JSON en `OIDC_CONFIG_PATH` (por defecto `./config/oidc.config.json`)
+- JSON file in `OIDC_CONFIG_PATH` (default `./config/oidc.config.json`)
 
-La configuración se guarda por API y se aplica tras `POST /api/config/restart`.
+Config is saved via API and applied after `POST /api/config/restart`.
 
-## Seguridad didáctica
+## Security Notes
 
-- `refresh_token` no se renderiza en UI.
-- llamadas OIDC muestran request/reply saneados (tokens obfuscados).
-- no se usa `localStorage` para credenciales.
+- `refresh_token` is never rendered in UI.
+- OIDC request/reply payloads are sanitized (token-like fields obfuscated).
+- No `localStorage` credentials.
