@@ -15,8 +15,10 @@ export class AuthService {
     return status;
   }
 
-  login(): void {
-    window.location.href = '/login';
+  login(idpHint?: string): void {
+    const trimmedHint = (idpHint ?? '').trim();
+    const loginUrl = trimmedHint.length > 0 ? `/login?kc_idp_hint=${encodeURIComponent(trimmedHint)}` : '/login';
+    window.location.href = loginUrl;
   }
 
   logout(): void {

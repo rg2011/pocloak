@@ -321,6 +321,44 @@ function createApiRoutes() {
     res.json(exchange);
   });
 
+  router.get('/oidc/token-exchange', async (req, res) => {
+    const { config } = await getOidcClient();
+    const providerAlias = typeof req.session.oidc?.kcIdpHint === 'string' ? req.session.oidc.kcIdpHint.trim() : '';
+    const realmBaseUrl = buildRealmBaseUrl(config.discoveryUrl);
+
+    if (!providerAlias) {
+      return res.status(400).json({
+        request: {
+          url: `${realmBaseUrl}/broker/{provider_alias}/token`,
+          method: 'GET',
+          headers: {
+            Accept: 'application/json'
+          },
+          body: null
+        },
+        reply: {
+          http_code: 400,
+          headers: {},
+          body: {
+            error: 'missing_kc_idp_hint',
+            error_description: 'No IdP alias found in session. Login with Service Name first.'
+          }
+        }
+      });
+    }
+
+    // Keycloak identity brokering: fetch original token from external IdP
+    const exchange = await executeOidcHttpCall({
+      url: `${realmBaseUrl}/broker/${encodeURIComponent(providerAlias)}/token`,
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${req.session.auth.accessToken}`
+      }
+    });
+    res.json(exchange);
+  });
+
   return router;
 }
 
@@ -333,6 +371,8 @@ function createAppRoutes() {
       
       // Create OIDC authorization request with state/nonce for security
       const authRequest = createAuthRequest(req.session, config);
+      const idpHint = typeof req.query.kc_idp_hint === 'string' ? req.query.kc_idp_hint.trim() : '';
+      req.session.oidc.kcIdpHint = idpHint || null;
       const authorizationParams = {
         scope: config.scope,
         redirect_uri: buildCallbackUrl(config),
@@ -344,6 +384,11 @@ function createAppRoutes() {
       if (config.usePkce) {
         authorizationParams.code_challenge_method = config.pkceMethod;
         authorizationParams.code_challenge = authRequest.codeChallenge;
+      }
+
+      if (idpHint) {
+        // Keycloak hint to preselect an external identity provider on login screen
+        authorizationParams.kc_idp_hint = idpHint;
       }
       
       const authorizationUrl = oidc.buildAuthorizationUrl(oidcConfiguration, authorizationParams).toString();

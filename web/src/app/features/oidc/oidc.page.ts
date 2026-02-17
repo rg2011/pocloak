@@ -25,6 +25,9 @@ import { EndpointTabSpec, fetchEndpointTab } from '../../shared/endpoint-tab.hel
           <li [class.is-active]="activeTab() === 'uma'">
             <a (click)="selectTab('uma')">UMA</a>
           </li>
+          <li [class.is-active]="activeTab() === 'token-exchange'">
+            <a (click)="selectTab('token-exchange')">Token Exchange</a>
+          </li>
         </ul>
       </div>
 
@@ -43,6 +46,10 @@ import { EndpointTabSpec, fetchEndpointTab } from '../../shared/endpoint-tab.hel
             <strong>UMA:</strong> requests authorization ticket/decision using UMA grant.
             <a href="https://www.keycloak.org/docs/latest/authorization_services/" target="_blank" rel="noreferrer">Keycloak Authorization Services</a>.
           </li>
+          <li>
+            <strong>Token exchange:</strong> asks Keycloak broker endpoint for the original external IdP token using <code>kcIdpHint</code> stored in session.
+            <a href="https://www.keycloak.org/docs/latest/server_admin/#retrieving-external-idp-tokens" target="_blank" rel="noreferrer">Retrieving external IdP tokens</a>.
+          </li>
         </ul>
       </div>
 
@@ -58,17 +65,18 @@ import { EndpointTabSpec, fetchEndpointTab } from '../../shared/endpoint-tab.hel
 })
 export class OidcPageComponent {
   private readonly http = inject(HttpClient);
-  private readonly endpointByTab: Record<'userinfo' | 'introspect' | 'uma', EndpointTabSpec> = {
+  private readonly endpointByTab: Record<'userinfo' | 'introspect' | 'uma' | 'token-exchange', EndpointTabSpec> = {
     userinfo: { url: '/api/oidc/userinfo', title: 'Userinfo' },
     introspect: { url: '/api/oidc/introspect', title: 'Introspect' },
-    uma: { url: '/api/oidc/uma', title: 'UMA Ticket' }
+    uma: { url: '/api/oidc/uma', title: 'UMA Ticket' },
+    'token-exchange': { url: '/api/oidc/token-exchange', title: 'Token Exchange (External IdP Token)' }
   };
-  readonly activeTab = signal<'summary' | 'userinfo' | 'introspect' | 'uma'>('summary');
+  readonly activeTab = signal<'summary' | 'userinfo' | 'introspect' | 'uma' | 'token-exchange'>('summary');
   readonly exchange = signal<HttpExchange | null>(null);
   readonly title = signal('');
   readonly error = signal('');
 
-  async selectTab(tab: 'summary' | 'userinfo' | 'introspect' | 'uma'): Promise<void> {
+  async selectTab(tab: 'summary' | 'userinfo' | 'introspect' | 'uma' | 'token-exchange'): Promise<void> {
     this.activeTab.set(tab);
 
     if (tab === 'summary') {

@@ -19,17 +19,13 @@ import { firstValueFrom } from 'rxjs';
           <strong>Refresh token in session:</strong>
           {{ readBool(t, 'hasRefreshToken') ? 'yes' : 'no' }}
         </p>
+
+        <h3 class="title is-6 mt-5">ID Token Claims</h3>
+        <pre>{{ pretty(readObj(t, 'idTokenClaims')) }}</pre>
+
+        <h3 class="title is-6 mt-5">Access Token Claims</h3>
+        <pre>{{ pretty(readObj(t, 'accessTokenClaims')) }}</pre>
       </div>
-    </article>
-
-    <article class="box" *ngIf="tokens() as t">
-      <h3 class="title is-6">ID Token Claims</h3>
-      <pre>{{ pretty(readObj(t, 'idTokenClaims')) }}</pre>
-    </article>
-
-    <article class="box" *ngIf="tokens() as t">
-      <h3 class="title is-6">Access Token Claims</h3>
-      <pre>{{ pretty(readObj(t, 'accessTokenClaims')) }}</pre>
     </article>
   `
 })
