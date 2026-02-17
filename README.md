@@ -32,6 +32,7 @@ Main flow:
   - `auth.service.js`: Token management in server-side session
   - `auth.guard.js`: Protects routes requiring authentication
   - `http.interceptor.js`: Automatic token refresh
+  - `http.utils.js`: HTTP plumbing utilities (sanitization, formatting)
   - `oidc.client.js`: OIDC discovery and client configuration
 - `src/server/`: Server setup
   - `server.js`: Express server entry point
@@ -122,6 +123,7 @@ Configuration is loaded from environment variables:
 - `OIDC_SCOPE`
 - `OIDC_UMA_AUDIENCE`
 - `OIDC_TRUSTED_IDP_CLAIM`
+- `OIDC_REALM_BASE_URL` (optional, derived from discovery URL if not set)
 - `OIDC_ENABLE_RAW_TOKEN_EXPORT` (training-only, default `false`)
 - `SESSION_SECRET`
 
@@ -134,6 +136,10 @@ Example values:
 - `custom.idp.alias`
 
 If this parameter is empty, backend falls back to default claim detection (`identity_provider` then `idp_alias`).
+
+`OIDC_REALM_BASE_URL` is optional. If set, it's used for realm metadata and broker endpoints. If not set, it's derived from `OIDC_DISCOVERY_URL` by removing the `/.well-known/...` suffix.
+
+Example: `https://keycloak.example.com/realms/myrealm`
 
 `kc_idp_hint` from login is treated as user input. It can still be shown in UI as unverified text, but trusted IdP should come from token claims.
 

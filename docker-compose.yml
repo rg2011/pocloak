@@ -21,5 +21,6 @@ services:
       - OIDC_SCOPE=${OIDC_SCOPE:-openid profile email offline_access}
       - OIDC_UMA_AUDIENCE=${OIDC_UMA_AUDIENCE}
       - OIDC_TRUSTED_IDP_CLAIM=${OIDC_TRUSTED_IDP_CLAIM}
+      - OIDC_REALM_BASE_URL=${OIDC_REALM_BASE_URL}
       - OIDC_ENABLE_RAW_TOKEN_EXPORT=${OIDC_ENABLE_RAW_TOKEN_EXPORT:-false}
       - APP_DOMAIN=${APP_DOMAIN:-http://localhost:3000}

@@ -11,7 +11,7 @@ function loadRuntimeConfig() {
     clientSecret: process.env.OIDC_CLIENT_SECRET || '',
     
     // PKCE (Proof Key for Code Exchange) adds security for public clients
-    usePkce: (process.env.OIDC_USE_PKCE || 'true').toLowerCase() === 'true',
+    usePkce: (process.env.OIDC_USE_PKCE || 'false').toLowerCase() === 'true',
     pkceMethod: process.env.OIDC_PKCE_METHOD || 'S256',
     
     // Application domain (used to build callback URL)
@@ -25,6 +25,10 @@ function loadRuntimeConfig() {
 
     // Optional access-token claim used as trusted IdP source (for example: identity_provider)
     trustedIdpClaim: process.env.OIDC_TRUSTED_IDP_CLAIM || '',
+
+    // Keycloak realm base URL (optional, for broker and realm metadata endpoints)
+    // Example: https://keycloak.example.com/realms/myrealm
+    realmBaseUrl: process.env.OIDC_REALM_BASE_URL || '',
 
     // Training-only flag: allows exporting raw access token from backend.
     // Keep disabled by default.

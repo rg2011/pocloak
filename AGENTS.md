@@ -11,7 +11,7 @@ Arquitectura inspirada en Angular: separación por `core`, `features`, `routes`,
 ### Enfoque pedagógico
 
 - Comentarios inline explican conceptos OIDC (state, nonce, PKCE, refresh)
-- Código simplificado: ~60 líneas de sanitización vs 85+ en versiones anteriores
+- Código simplificado: utilidades HTTP movidas a `http.utils.js` para mantener `routes.js` enfocado en flujo OIDC
 - Configuración simple: solo variables de entorno (sin persistencia en fichero)
 - Diagramas visuales de flujo en la UI
 - Inspector HTTP muestra request/response sanitizados
@@ -33,6 +33,7 @@ Arquitectura inspirada en Angular: separación por `core`, `features`, `routes`,
     - `auth.service.js`
     - `auth.guard.js`
     - `http.interceptor.js`
+    - `http.utils.js`
     - `oidc.client.js`
   - `src/server`
     - `server.js`
@@ -129,7 +130,7 @@ Arquitectura inspirada en Angular: separación por `core`, `features`, `routes`,
 ### Puntos frágiles conocidos
 
 - La ruta `/oidc/uma` depende de configuración y permisos reales del cliente en Keycloak.
-- Las rutas públicas `/discovery/uma2` y `/discovery/realm` se derivan desde `discoveryUrl`; si el formato de URL cambia y no contiene `/.well-known/`, la derivación puede fallar.
+- Las rutas públicas `/discovery/uma2` y `/discovery/realm` usan `OIDC_REALM_BASE_URL` si está configurado, o lo derivan desde `discoveryUrl` (requiere formato con `/.well-known/`).
 - `token_endpoint_auth_method` cambia según exista o no `clientSecret`.
 
 ### Qué no hacer sin pedir confirmación
