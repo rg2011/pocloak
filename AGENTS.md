@@ -28,25 +28,23 @@ Arquitectura inspirada en Angular: separación por `core`, `features`, `routes`,
 
 ### Estructura implementada
 
-- `src/core`
-  - `auth.service.js`
-  - `auth.guard.js`
-  - `http.interceptor.js`
-  - `oidc.client.js`
-- `src/features`
-  - `discovery`
-  - `home`
-  - `tokens`
-  - `session`
-  - `oidc`
-  - `config`
-- `src/server`
-  - `server.js`
-  - `routes.js`
-  - `keycloak.config.js`
-- Raíz:
+- Backend `src/`
+  - `src/core`
+    - `auth.service.js`
+    - `auth.guard.js`
+    - `http.interceptor.js`
+    - `oidc.client.js`
+  - `src/server`
+    - `server.js`
+    - `routes.js`
+    - `keycloak.config.js`
   - `src/app.bootstrap.js`
   - `src/app.routes.js`
+- Frontend Angular `web/src/app/`
+  - `core/` (`auth.service.ts`, `auth.guard.ts`, `auth.interceptor.ts`, `api.types.ts`)
+  - `features/` (`home`, `config`, `discovery`, `oidc`, `tokens`, `session`)
+  - `shared/` (`endpoint-inspector.component.ts`)
+- Raíz:
   - `Dockerfile`
   - `docker-compose.yml`
   - `.devcontainer/devcontainer.json`
@@ -70,7 +68,7 @@ Arquitectura inspirada en Angular: separación por `core`, `features`, `routes`,
      - `/oidc/uma`
 
 7. UI de inspección HTTP compartida:
-   - `src/features/oidc/endpoint.inspector.view.js`
+   - `web/src/app/shared/endpoint-inspector.component.ts`
    - Se reutiliza en páginas `discovery` y `oidc` para evitar duplicación de tabs/script/curl/response.
 
 ### Configuración implementada

@@ -13,7 +13,7 @@ import { AuthService } from './core/auth.service';
         <div class="navbar-menu is-active">
           <div class="navbar-start">
             <a class="navbar-item" routerLink="/" routerLinkActive="is-active has-background-link-light has-text-link-dark has-text-weight-semibold" [routerLinkActiveOptions]="{ exact: true }">Home</a>
-            <a class="navbar-item" routerLink="/config" routerLinkActive="is-active has-background-link-light has-text-link-dark has-text-weight-semibold">Config</a>
+            <a class="navbar-item" routerLink="/flows" routerLinkActive="is-active has-background-link-light has-text-link-dark has-text-weight-semibold">Flows</a>
             <a class="navbar-item" routerLink="/discovery" routerLinkActive="is-active has-background-link-light has-text-link-dark has-text-weight-semibold">Discovery</a>
             <a
               *ngIf="isAuthenticated(); else tokensDisabled"

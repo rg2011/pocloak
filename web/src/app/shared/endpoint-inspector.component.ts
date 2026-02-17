@@ -7,7 +7,7 @@ import { HttpExchange } from '../core/api.types';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <article class="box" *ngIf="exchange">
+    <div *ngIf="exchange">
       <h3 class="title is-6">{{ title }}</h3>
       <div class="content">
         <p><strong>Request:</strong> {{ exchange.request.method }} {{ exchange.request.url }}</p>
@@ -15,7 +15,7 @@ import { HttpExchange } from '../core/api.types';
         <p><strong>Response:</strong> HTTP {{ exchange.reply.http_code }}</p>
         <pre>{{ toPretty(exchange.reply) }}</pre>
       </div>
-    </article>
+    </div>
   `
 })
 export class EndpointInspectorComponent {

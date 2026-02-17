@@ -1,9 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
 import { HttpExchange } from '../../core/api.types';
 import { EndpointInspectorComponent } from '../../shared/endpoint-inspector.component';
+import { navigateToQueryTab, resolveQueryTab } from '../../shared/query-tab-state';
+
+const DISCOVERY_TABS = ['summary', 'discovery', 'realm', 'uma2'] as const;
+type DiscoveryTab = (typeof DISCOVERY_TABS)[number];
 
 @Component({
   standalone: true,
@@ -32,38 +38,55 @@ import { EndpointInspectorComponent } from '../../shared/endpoint-inspector.comp
         <p>This page groups public realm metadata endpoints and authorization-capability discovery endpoints.</p>
         <ul>
           <li>
-            <strong>Discovery:</strong> fetches the OIDC well-known document with issuer capabilities and endpoints.
+            <strong><a (click)="selectTab('discovery')">Discovery</a>:</strong> fetches the OIDC well-known document with issuer capabilities and endpoints.
             <a href="https://openid.net/specs/openid-connect-discovery-1_0.html" target="_blank" rel="noreferrer">OIDC Discovery spec</a>.
           </li>
           <li>
-            <strong>Realm:</strong> reads public realm metadata derived from the discovery URL.
+            <strong><a (click)="selectTab('realm')">Realm</a>:</strong> reads public realm metadata derived from the discovery URL.
             <a href="https://www.keycloak.org/securing-apps/oidc-layers" target="_blank" rel="noreferrer">Keycloak OIDC layers</a>.
           </li>
           <li>
-            <strong>UMA2:</strong> reads UMA2 well-known metadata for authorization and policy capabilities.
+            <strong><a (click)="selectTab('uma2')">UMA2</a>:</strong> reads UMA2 well-known metadata for authorization and policy capabilities.
             <a href="https://www.keycloak.org/docs/latest/authorization_services/" target="_blank" rel="noreferrer">Keycloak Authorization Services</a>.
           </li>
         </ul>
       </div>
 
       <p *ngIf="error() && activeTab() !== 'summary'">{{ error() }}</p>
-    </article>
 
-    <app-endpoint-inspector
-      *ngIf="activeTab() !== 'summary' && exchange()"
-      [title]="title()"
-      [exchange]="exchange()"
-    ></app-endpoint-inspector>
+      <app-endpoint-inspector
+        *ngIf="activeTab() !== 'summary' && exchange()"
+        [title]="title()"
+        [exchange]="exchange()"
+      ></app-endpoint-inspector>
+    </article>
   `
 })
 export class DiscoveryPageComponent {
   private readonly http = inject(HttpClient);
-  readonly activeTab = signal<'summary' | 'discovery' | 'realm' | 'uma2'>('summary');
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  readonly activeTab = signal<DiscoveryTab>('summary');
   readonly exchange = signal<HttpExchange | null>(null);
   readonly title = signal('');
   readonly error = signal('');
 
-  async selectTab(tab: 'summary' | 'discovery' | 'realm' | 'uma2'): Promise<void> {
+  constructor() {
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const tab = resolveQueryTab(params.get('tab'), DISCOVERY_TABS, 'summary');
+      void this.activateTab(tab);
+    });
+  }
+
+  async selectTab(tab: DiscoveryTab): Promise<void> {
+    if (tab === this.activeTab()) {
+      return;
+    }
+    await navigateToQueryTab(this.router, this.route, tab);
+  }
+
+  private async activateTab(tab: DiscoveryTab): Promise<void> {
     this.activeTab.set(tab);
 
     if (tab === 'summary') {
