@@ -1,15 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { firstValueFrom } from 'rxjs';
+import { Component, inject, signal } from '@angular/core';
 import { HttpExchange } from '../../core/api.types';
 import { EndpointInspectorComponent } from '../../shared/endpoint-inspector.component';
-import { navigateToQueryTab, resolveQueryTab } from '../../shared/query-tab-state';
-
-const DISCOVERY_TABS = ['summary', 'discovery', 'realm', 'uma2'] as const;
-type DiscoveryTab = (typeof DISCOVERY_TABS)[number];
+import { EndpointTabSpec, fetchEndpointTab } from '../../shared/endpoint-tab.helper';
 
 @Component({
   standalone: true,
@@ -64,54 +58,31 @@ type DiscoveryTab = (typeof DISCOVERY_TABS)[number];
 })
 export class DiscoveryPageComponent {
   private readonly http = inject(HttpClient);
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
-  readonly activeTab = signal<DiscoveryTab>('summary');
+  private readonly endpointByTab: Record<'discovery' | 'realm' | 'uma2', EndpointTabSpec> = {
+    discovery: { url: '/api/discovery/data', title: 'OIDC Discovery' },
+    realm: { url: '/api/discovery/realm', title: 'Realm Metadata' },
+    uma2: { url: '/api/discovery/uma2', title: 'UMA2 Well-Known' }
+  };
+  readonly activeTab = signal<'summary' | 'discovery' | 'realm' | 'uma2'>('summary');
   readonly exchange = signal<HttpExchange | null>(null);
   readonly title = signal('');
   readonly error = signal('');
 
-  constructor() {
-    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
-      const tab = resolveQueryTab(params.get('tab'), DISCOVERY_TABS, 'summary');
-      void this.activateTab(tab);
-    });
-  }
-
-  async selectTab(tab: DiscoveryTab): Promise<void> {
-    if (tab === this.activeTab()) {
-      return;
-    }
-    await navigateToQueryTab(this.router, this.route, tab);
-  }
-
-  private async activateTab(tab: DiscoveryTab): Promise<void> {
+  async selectTab(tab: 'summary' | 'discovery' | 'realm' | 'uma2'): Promise<void> {
     this.activeTab.set(tab);
 
     if (tab === 'summary') {
       return;
     }
 
-    if (tab === 'discovery') {
-      await this.callEndpoint('/api/discovery/data', 'OIDC Discovery');
-      return;
-    }
-
-    if (tab === 'realm') {
-      await this.callEndpoint('/api/discovery/realm', 'Realm Metadata');
-      return;
-    }
-
-    await this.callEndpoint('/api/discovery/uma2', 'UMA2 Well-Known');
-  }
-
-  async callEndpoint(url: string, title: string): Promise<void> {
     try {
       this.error.set('');
-      this.title.set(title);
-      const response = await firstValueFrom(this.http.get<HttpExchange>(url));
-      this.exchange.set(response);
+      const result = await fetchEndpointTab(this.http, this.endpointByTab, tab);
+      if (!result) {
+        return;
+      }
+      this.title.set(result.title);
+      this.exchange.set(result.exchange);
     } catch (error) {
       this.error.set('Error while calling public endpoint.');
     }

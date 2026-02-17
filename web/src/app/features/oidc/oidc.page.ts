@@ -1,15 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { firstValueFrom } from 'rxjs';
+import { Component, inject, signal } from '@angular/core';
 import { HttpExchange } from '../../core/api.types';
 import { EndpointInspectorComponent } from '../../shared/endpoint-inspector.component';
-import { navigateToQueryTab, resolveQueryTab } from '../../shared/query-tab-state';
-
-const OIDC_TABS = ['summary', 'userinfo', 'introspect', 'uma'] as const;
-type OidcTab = (typeof OIDC_TABS)[number];
+import { EndpointTabSpec, fetchEndpointTab } from '../../shared/endpoint-tab.helper';
 
 @Component({
   standalone: true,
@@ -64,54 +58,31 @@ type OidcTab = (typeof OIDC_TABS)[number];
 })
 export class OidcPageComponent {
   private readonly http = inject(HttpClient);
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
-  readonly activeTab = signal<OidcTab>('summary');
+  private readonly endpointByTab: Record<'userinfo' | 'introspect' | 'uma', EndpointTabSpec> = {
+    userinfo: { url: '/api/oidc/userinfo', title: 'Userinfo' },
+    introspect: { url: '/api/oidc/introspect', title: 'Introspect' },
+    uma: { url: '/api/oidc/uma', title: 'UMA Ticket' }
+  };
+  readonly activeTab = signal<'summary' | 'userinfo' | 'introspect' | 'uma'>('summary');
   readonly exchange = signal<HttpExchange | null>(null);
   readonly title = signal('');
   readonly error = signal('');
 
-  constructor() {
-    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
-      const tab = resolveQueryTab(params.get('tab'), OIDC_TABS, 'summary');
-      void this.activateTab(tab);
-    });
-  }
-
-  async selectTab(tab: OidcTab): Promise<void> {
-    if (tab === this.activeTab()) {
-      return;
-    }
-    await navigateToQueryTab(this.router, this.route, tab);
-  }
-
-  private async activateTab(tab: OidcTab): Promise<void> {
+  async selectTab(tab: 'summary' | 'userinfo' | 'introspect' | 'uma'): Promise<void> {
     this.activeTab.set(tab);
 
     if (tab === 'summary') {
       return;
     }
 
-    if (tab === 'userinfo') {
-      await this.callEndpoint('/api/oidc/userinfo', 'Userinfo');
-      return;
-    }
-
-    if (tab === 'introspect') {
-      await this.callEndpoint('/api/oidc/introspect', 'Introspect');
-      return;
-    }
-
-    await this.callEndpoint('/api/oidc/uma', 'UMA Ticket');
-  }
-
-  async callEndpoint(url: string, title: string): Promise<void> {
     try {
       this.error.set('');
-      this.title.set(title);
-      const response = await firstValueFrom(this.http.get<HttpExchange>(url));
-      this.exchange.set(response);
+      const result = await fetchEndpointTab(this.http, this.endpointByTab, tab);
+      if (!result) {
+        return;
+      }
+      this.title.set(result.title);
+      this.exchange.set(result.exchange);
     } catch (error) {
       this.error.set('Error while calling protected endpoint. Is session active?');
     }

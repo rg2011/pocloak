@@ -10,6 +10,7 @@ Goal: show an end-to-end OIDC flow with a minimal Angular app and a Node BFF tha
 - Sensitive tokens never exposed in the DOM.
 - No extra UI toolkit: Bulma CDN + semantic HTML.
 - Clear split between Angular frontend and Node OIDC backend.
+- New features are accepted only when they improve OIDC learning value.
 
 ## Architecture
 
@@ -42,15 +43,15 @@ Main flow:
 ### Frontend (Angular)
 
 - `web/src/app/core/`: Auth services, guards, interceptors
-- `web/src/app/features/`: Page components (home, tokens, session, oidc, discovery, config)
-- `web/src/app/shared/`: Reusable components (endpoint inspector)
+- `web/src/app/features/`: Page components (home, flows, tokens, session, oidc, discovery)
+- `web/src/app/shared/`: Reusable components (endpoint inspector, swimlane diagram)
 
 ### Teaching Features
 
 - Inline comments explain OIDC concepts (state, nonce, PKCE, token refresh)
-- Visual swimlane diagrams show login and access flows
+- Visual swimlane diagrams show login/access flows and a conceptual SPA+PKCE flow
 - HTTP inspector shows sanitized request/response for each OIDC call
-- Config page displays current settings with .env instructions
+- Home page includes a Config tab that displays current settings with .env instructions
 
 ## Endpoints
 

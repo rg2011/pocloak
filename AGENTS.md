@@ -42,8 +42,8 @@ Arquitectura inspirada en Angular: separación por `core`, `features`, `routes`,
   - `src/app.routes.js`
 - Frontend Angular `web/src/app/`
   - `core/` (`auth.service.ts`, `auth.guard.ts`, `auth.interceptor.ts`, `api.types.ts`)
-  - `features/` (`home`, `config`, `discovery`, `oidc`, `tokens`, `session`)
-  - `shared/` (`endpoint-inspector.component.ts`)
+  - `features/` (`home`, `flows`, `discovery`, `oidc`, `tokens`, `session`)
+  - `shared/` (`endpoint-inspector.component.ts`, `swimlane-diagram.component.ts`)
 - Raíz:
   - `Dockerfile`
   - `docker-compose.yml`
@@ -74,6 +74,7 @@ Arquitectura inspirada en Angular: separación por `core`, `features`, `routes`,
 ### Configuración implementada
 
 - Ruta de consulta: `GET /api/config`
+- UI: pestaña `Config` dentro de `home` (no página `config` separada)
 - Configuración desde variables de entorno (ver `.env.example`)
 - No hay persistencia en fichero JSON (simplificado para uso local)
 
@@ -84,6 +85,22 @@ Arquitectura inspirada en Angular: separación por `core`, `features`, `routes`,
 - Mantener separación `core` / `features` / `server`.
 - No exponer refresh token en el DOM.
 - No introducir secretos en frontend.
+
+## Guardrails pedagógicos (muy importante)
+
+- Cada cambio debe enseñar un concepto OIDC concreto. Si no, no entra.
+- Preferir implementación explícita y local sobre abstracciones genéricas.
+- Evitar "side quests" de UX/infra que no mejoren la comprensión del flujo OIDC.
+- Si una mejora de UI requiere más código que el concepto que explica, simplificar.
+- Mantener rutas, tabs y componentes con comportamiento predecible y fácil de leer.
+
+### Checklist antes de añadir funcionalidad
+
+- ¿Qué concepto OIDC se aprende con este cambio?
+- ¿Se puede explicar en 1-2 frases en la UI o en comentarios inline?
+- ¿Añade más complejidad accidental que valor didáctico?
+- ¿Existe una versión más simple (aunque menos "completa") que enseñe lo mismo?
+- ¿Un desarrollador Angular nuevo en OIDC entendería el flujo leyendo este archivo?
 
 ## Notas para futuras sesiones agentic
 

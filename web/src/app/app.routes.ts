@@ -10,7 +10,6 @@ import { TokensPageComponent } from './features/tokens/tokens.page';
 export const appRoutes: Routes = [
   { path: '', component: HomePageComponent },
   { path: 'flows', component: FlowsPageComponent },
-  { path: 'config', redirectTo: '', pathMatch: 'full' },
   { path: 'discovery', component: DiscoveryPageComponent },
   { path: 'tokens', component: TokensPageComponent, canActivate: [authGuard] },
   { path: 'session', component: SessionPageComponent, canActivate: [authGuard] },

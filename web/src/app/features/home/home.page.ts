@@ -71,7 +71,7 @@ import { firstValueFrom } from 'rxjs';
           </tbody>
         </table>
 
-        <div class="notification">
+        <div class="box">
           <p><strong>How to configure:</strong></p>
           <ol>
             <li>Copy <code>.env.example</code> to <code>.env</code></li>
