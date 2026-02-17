@@ -1,0 +1,18 @@
+services:
+  pocloak:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pocloak:latest
+    container_name: pocloak
+    user: "1000:1000"
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - OIDC_CONFIG_PATH=/app/config/oidc.config.json
+      - SESSION_SECRET=dev-session-secret-change-me
+    volumes:
+      - ./config:/app/config

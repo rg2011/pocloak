@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+.env
+.DS_Store
+.idea
+.vscode
+*.log
+*.tsbuildinfo
+*.bak
+*.tmp
+*.swp
+oidc.config.json
