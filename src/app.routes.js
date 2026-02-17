@@ -7,8 +7,6 @@ function routeMap() {
       'GET /api/health',
       'GET /api/auth/status',
       'GET /api/config',
-      'POST /api/config',
-      'POST /api/config/restart',
       'GET /api/discovery/data',
       'GET /api/discovery/uma2',
       'GET /api/discovery/realm'

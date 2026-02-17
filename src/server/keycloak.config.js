@@ -1,81 +1,30 @@
-const fs = require('node:fs');
-const path = require('node:path');
+// OIDC configuration: loads from environment variables
+// Students can modify .env file and restart the app to test different configs
 
-const DEFAULT_CONFIG_PATH = process.env.OIDC_CONFIG_PATH || path.join(process.cwd(), 'config', 'oidc.config.json');
-
-function readJsonFile(filePath) {
-  if (!fs.existsSync(filePath)) {
-    return null;
-  }
-
-  try {
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    return JSON.parse(fileContent);
-  } catch (error) {
-    console.error('[config] No se pudo leer/parsing del fichero de configuración:', error.message);
-    return null;
-  }
-}
-
-function envConfig() {
+function loadRuntimeConfig() {
   return {
+    // Keycloak discovery endpoint (contains all OIDC URLs)
     discoveryUrl: process.env.OIDC_DISCOVERY_URL || '',
+    
+    // OAuth2 client credentials
     clientId: process.env.OIDC_CLIENT_ID || '',
     clientSecret: process.env.OIDC_CLIENT_SECRET || '',
+    
+    // PKCE (Proof Key for Code Exchange) adds security for public clients
     usePkce: (process.env.OIDC_USE_PKCE || 'true').toLowerCase() === 'true',
     pkceMethod: process.env.OIDC_PKCE_METHOD || 'S256',
+    
+    // Application domain (used to build callback URL)
     domain: process.env.APP_DOMAIN || 'http://localhost:3000',
+    
+    // OIDC scopes: openid is required, offline_access gives refresh_token
     scope: process.env.OIDC_SCOPE || 'openid profile email offline_access',
+    
+    // UMA audience (optional, for User-Managed Access)
     umaAudience: process.env.OIDC_UMA_AUDIENCE || ''
   };
 }
 
-function sanitizeConfig(config) {
-  return {
-    discoveryUrl: config.discoveryUrl || '',
-    clientId: config.clientId || '',
-    clientSecret: config.clientSecret || '',
-    usePkce: typeof config.usePkce === 'boolean' ? config.usePkce : true,
-    pkceMethod: config.pkceMethod === 'plain' ? 'plain' : 'S256',
-    domain: config.domain || 'http://localhost:3000',
-    scope: config.scope || 'openid profile email offline_access',
-    umaAudience: config.umaAudience || ''
-  };
-}
-
-function getConfigFilePath() {
-  return DEFAULT_CONFIG_PATH;
-}
-
-function loadRuntimeConfig() {
-  const fromFile = readJsonFile(DEFAULT_CONFIG_PATH) || {};
-  const fromEnv = envConfig();
-  const merged = {
-    ...fromEnv,
-    ...fromFile
-  };
-
-  return sanitizeConfig(merged);
-}
-
-function getRawConfigFile() {
-  const config = readJsonFile(DEFAULT_CONFIG_PATH);
-  return config || {};
-}
-
-function saveConfigFile(nextConfig) {
-  const safeConfig = sanitizeConfig(nextConfig);
-  const parent = path.dirname(DEFAULT_CONFIG_PATH);
-
-  fs.mkdirSync(parent, { recursive: true });
-  fs.writeFileSync(DEFAULT_CONFIG_PATH, `${JSON.stringify(safeConfig, null, 2)}\n`, 'utf-8');
-
-  return safeConfig;
-}
-
 module.exports = {
-  getConfigFilePath,
-  getRawConfigFile,
-  loadRuntimeConfig,
-  saveConfigFile
+  loadRuntimeConfig
 };

@@ -2,9 +2,19 @@
 
 ## Objetivo del repositorio
 
-Este repositorio es una POC didáctica para integrar Node.js con Keycloak usando OIDC, con arquitectura inspirada en Angular (separación por `core`, `features`, `routes`, `guard`, `interceptor`).
+Este repositorio es una POC didáctica para enseñar OIDC a equipos Angular, integrando Node.js con Keycloak.
 
-Prioridad: claridad del flujo OIDC por encima de abstracciones complejas.
+Arquitectura inspirada en Angular: separación por `core`, `features`, `routes`, `guard`, `interceptor`.
+
+**Prioridad**: claridad del flujo OIDC por encima de abstracciones complejas.
+
+### Enfoque pedagógico
+
+- Comentarios inline explican conceptos OIDC (state, nonce, PKCE, refresh)
+- Código simplificado: ~60 líneas de sanitización vs 85+ en versiones anteriores
+- Configuración simple: solo variables de entorno (sin persistencia en fichero)
+- Diagramas visuales de flujo en la UI
+- Inspector HTTP muestra request/response sanitizados
 
 ## Estado actual de implementación (fuente de verdad)
 
@@ -37,10 +47,10 @@ Prioridad: claridad del flujo OIDC por encima de abstracciones complejas.
 - Raíz:
   - `src/app.bootstrap.js`
   - `src/app.routes.js`
-  - `config/oidc.config.json`
   - `Dockerfile`
   - `docker-compose.yml`
   - `.devcontainer/devcontainer.json`
+  - `.env.example` (plantilla de configuración)
 
 ### Flujo OIDC implementado
 
@@ -65,10 +75,9 @@ Prioridad: claridad del flujo OIDC por encima de abstracciones complejas.
 
 ### Configuración implementada
 
-- Ruta editable: `GET/POST /config`
-- Ruta de reinicio controlado: `POST /config/restart` (usa `process.exit(0)`)
-- Fichero configurable por `OIDC_CONFIG_PATH` (default `./config/oidc.config.json`)
-- Merge: defaults desde env + sobreescritura desde fichero
+- Ruta de consulta: `GET /api/config`
+- Configuración desde variables de entorno (ver `.env.example`)
+- No hay persistencia en fichero JSON (simplificado para uso local)
 
 ## Reglas de diseño (mantener)
 
@@ -98,19 +107,19 @@ Prioridad: claridad del flujo OIDC por encima de abstracciones complejas.
 
 ### Docker y permisos
 
-- `Dockerfile` crea `appuser` con UID/GID 1000 y home.
-- `docker-compose.yml` fuerza `user: "1000:1000"` para volumen de `./config`.
-- Mantener `restart: unless-stopped` para soportar reinicio tras `/config/restart`.
+- `Dockerfile` crea `appuser` con UID/GID 1000.
+- `docker-compose.yml` lee variables de entorno desde `.env` local.
+- Mantener `restart: unless-stopped` para facilitar desarrollo.
 
 ### Puntos frágiles conocidos
 
 - La ruta `/oidc/uma` depende de configuración y permisos reales del cliente en Keycloak.
 - Las rutas públicas `/discovery/uma2` y `/discovery/realm` se derivan desde `discoveryUrl`; si el formato de URL cambia y no contiene `/.well-known/`, la derivación puede fallar.
 - `token_endpoint_auth_method` cambia según exista o no `clientSecret`.
-- Cambios de configuración requieren reinicio del proceso para recargar estado limpio del cliente OIDC en memoria.
 
 ### Qué no hacer sin pedir confirmación
 
 - No añadir toolchains frontend ni bundlers.
 - No cambiar almacenamiento de tokens a `localStorage`.
 - No convertir esta POC en arquitectura de producción (RBAC complejo, etc.) salvo petición explícita.
+- No reintroducir configuración dinámica con persistencia en fichero (simplificado para uso local).

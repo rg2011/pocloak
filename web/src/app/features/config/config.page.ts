@@ -1,40 +1,72 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule],
   template: `
     <article class="box">
-      <h2 class="title is-5">Runtime Config</h2>
-      <p class="mb-3">Edit OIDC runtime configuration and trigger a controlled process restart.</p>
+      <h2 class="title is-5">OIDC Configuration</h2>
+      <p class="mb-4">Current configuration loaded from environment variables. To change, edit your <code>.env</code> file and restart the server.</p>
 
-      <div class="field">
-        <label class="label">Config JSON</label>
-        <div class="control">
-          <textarea class="textarea" rows="18" [(ngModel)]="configJson"></textarea>
-        </div>
+      <div class="content" *ngIf="config()">
+        <table class="table is-fullwidth is-striped">
+          <tbody>
+            <tr>
+              <th>Discovery URL</th>
+              <td><code>{{ config().discoveryUrl || '(not set)' }}</code></td>
+            </tr>
+            <tr>
+              <th>Client ID</th>
+              <td><code>{{ config().clientId || '(not set)' }}</code></td>
+            </tr>
+            <tr>
+              <th>Client Secret</th>
+              <td><code>{{ config().clientSecret ? '[configured]' : '(not set)' }}</code></td>
+            </tr>
+            <tr>
+              <th>Use PKCE</th>
+              <td><code>{{ config().usePkce }}</code></td>
+            </tr>
+            <tr>
+              <th>PKCE Method</th>
+              <td><code>{{ config().pkceMethod }}</code></td>
+            </tr>
+            <tr>
+              <th>App Domain</th>
+              <td><code>{{ config().domain }}</code></td>
+            </tr>
+            <tr>
+              <th>Scope</th>
+              <td><code>{{ config().scope }}</code></td>
+            </tr>
+            <tr>
+              <th>UMA Audience</th>
+              <td><code>{{ config().umaAudience || '(not set)' }}</code></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
-      <div class="buttons">
-        <button class="button is-link" (click)="saveConfig()" [disabled]="loading()">Save</button>
-        <button class="button is-danger" (click)="restart()" [disabled]="loading()">Restart Process</button>
+      <div class="notification is-info is-light mt-4">
+        <p><strong>How to configure:</strong></p>
+        <ol>
+          <li>Copy <code>.env.example</code> to <code>.env</code></li>
+          <li>Edit the values in <code>.env</code></li>
+          <li>Restart the server: <code>npm start</code></li>
+        </ol>
       </div>
 
-      <p *ngIf="message()">{{ message() }}</p>
-      <p *ngIf="error()">{{ error() }}</p>
+      <p class="has-text-danger" *ngIf="error()">{{ error() }}</p>
     </article>
   `
 })
 export class ConfigPageComponent {
   private readonly http = inject(HttpClient);
-  readonly loading = signal(false);
-  readonly message = signal('');
+  readonly config = signal<any>(null);
   readonly error = signal('');
-  configJson = '{}';
 
   constructor() {
     void this.loadConfig();
@@ -42,55 +74,10 @@ export class ConfigPageComponent {
 
   async loadConfig(): Promise<void> {
     try {
-      this.loading.set(true);
-      this.error.set('');
-      const response = await firstValueFrom(this.http.get<{ rawConfig: unknown }>('/api/config'));
-      this.configJson = JSON.stringify(response.rawConfig || {}, null, 2);
+      const response = await firstValueFrom(this.http.get('/api/config'));
+      this.config.set(response);
     } catch (error) {
       this.error.set('Could not load configuration.');
-    } finally {
-      this.loading.set(false);
-    }
-  }
-
-  async saveConfig(): Promise<void> {
-    try {
-      this.loading.set(true);
-      this.error.set('');
-      this.message.set('');
-      const payload = JSON.parse(this.configJson);
-      await firstValueFrom(this.http.post('/api/config', payload));
-      this.message.set('Configuration saved.');
-    } catch (error) {
-      this.error.set('Invalid JSON or save error.');
-    } finally {
-      this.loading.set(false);
-    }
-  }
-
-  async restart(): Promise<void> {
-    try {
-      this.loading.set(true);
-      this.error.set('');
-      this.message.set('Reiniciando proceso, esperando healthcheck...');
-      await firstValueFrom(this.http.post('/api/config/restart', {}));
-
-      const startedAt = Date.now();
-      while (Date.now() - startedAt < 15000) {
-        try {
-          await firstValueFrom(this.http.get('/api/health'));
-          window.location.href = '/';
-          return;
-        } catch (error) {
-          await new Promise((resolve) => setTimeout(resolve, 600));
-        }
-      }
-
-      this.error.set('No server response after restart.');
-    } catch (error) {
-      this.error.set('Could not request restart.');
-    } finally {
-      this.loading.set(false);
     }
   }
 }

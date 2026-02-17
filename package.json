@@ -5,12 +5,12 @@
   "main": "src/server/server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node scripts/process-supervisor.js",
-    "start:api": "node scripts/process-supervisor.js",
+    "start": "node src/server/server.js",
+    "start:api": "node src/server/server.js",
     "build:web": "ng build",
     "dev:web": "ng serve --host 0.0.0.0 --port 4200 --proxy-config web/proxy.conf.json",
-    "dev": "node scripts/process-supervisor.js",
-    "dev:container": "node scripts/process-supervisor.js"
+    "dev": "node src/server/server.js",
+    "dev:container": "node src/server/server.js"
   },
   "engines": {
     "node": ">=20"

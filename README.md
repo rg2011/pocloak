@@ -15,7 +15,6 @@ Goal: show an end-to-end OIDC flow with a minimal Angular app and a Node BFF tha
 
 - `web/`: Angular standalone SPA (router, guard, interceptor, tutorial pages)
 - `src/`: Node/Express backend + `openid-client`
-- `config/oidc.config.json`: runtime-editable OIDC config
 
 Main flow:
 
@@ -24,6 +23,35 @@ Main flow:
 3. Backend exchanges code for tokens and stores them in `express-session`.
 4. Angular calls `/api/*` endpoints to inspect requests and replies.
 
+## Code Organization
+
+### Backend (Node/Express)
+
+- `src/core/`: Core OIDC functionality
+  - `auth.service.js`: Token management in server-side session
+  - `auth.guard.js`: Protects routes requiring authentication
+  - `http.interceptor.js`: Automatic token refresh
+  - `oidc.client.js`: OIDC discovery and client configuration
+- `src/server/`: Server setup
+  - `server.js`: Express server entry point
+  - `routes.js`: API endpoints with inline teaching comments
+  - `keycloak.config.js`: Environment-based configuration
+- `src/app.bootstrap.js`: Express app initialization
+- `src/app.routes.js`: Route map (public vs protected)
+
+### Frontend (Angular)
+
+- `web/src/app/core/`: Auth services, guards, interceptors
+- `web/src/app/features/`: Page components (home, tokens, session, oidc, discovery, config)
+- `web/src/app/shared/`: Reusable components (endpoint inspector)
+
+### Teaching Features
+
+- Inline comments explain OIDC concepts (state, nonce, PKCE, token refresh)
+- Visual swimlane diagrams show login and access flows
+- HTTP inspector shows sanitized request/response for each OIDC call
+- Config page displays current settings with .env instructions
+
 ## Endpoints
 
 Public:
@@ -31,8 +59,6 @@ Public:
 - `GET /api/health`
 - `GET /api/auth/status`
 - `GET /api/config`
-- `POST /api/config`
-- `POST /api/config/restart`
 - `GET /api/discovery/data`
 - `GET /api/discovery/realm`
 - `GET /api/discovery/uma2`
@@ -81,7 +107,7 @@ In Docker, image builds Angular in tutorial mode (`npm run build:web`: non-minif
 
 ## OIDC Configuration
 
-Supported env vars:
+Configuration is loaded from environment variables:
 
 - `OIDC_DISCOVERY_URL`
 - `OIDC_CLIENT_ID`
@@ -93,14 +119,16 @@ Supported env vars:
 - `OIDC_UMA_AUDIENCE`
 - `SESSION_SECRET`
 
-Persisted runtime config:
+To configure:
 
-- JSON file in `OIDC_CONFIG_PATH` (default `./config/oidc.config.json`)
-
-Config is saved via API and applied after `POST /api/config/restart`.
+1. Copy `.env.example` to `.env`
+2. Edit values in `.env`
+3. Restart the server
 
 ## Security Notes
 
-- `refresh_token` is never rendered in UI.
-- OIDC request/reply payloads are sanitized (token-like fields obfuscated).
-- No `localStorage` credentials.
+- `refresh_token` is never sent to the browser (stored only in server-side session).
+- OIDC request/reply payloads are sanitized before display (tokens obfuscated).
+- No credentials in `localStorage` or browser storage.
+- JWT tokens decoded for display only (not verified - teaching purpose).
+- Inline comments mark security-critical code sections.

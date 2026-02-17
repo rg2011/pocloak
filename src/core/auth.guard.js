@@ -1,3 +1,6 @@
+// Auth Guard: protects routes that require authentication
+// Similar to Angular's CanActivate guard
+
 const { isAuthenticated } = require('./auth.service');
 
 function authGuard(req, res, next) {
@@ -5,10 +8,11 @@ function authGuard(req, res, next) {
     return next();
   }
 
+  // API calls get 401, browser requests get redirected
   if (req.path.startsWith('/api/')) {
     return res.status(401).json({
       error: 'unauthorized',
-      message: 'No hay sesión autenticada.'
+      message: 'No authenticated session found.'
     });
   }
 

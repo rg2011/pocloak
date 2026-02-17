@@ -22,8 +22,7 @@
     }
   },
   "containerEnv": {
-    "PORT": "3000",
-    "OIDC_CONFIG_PATH": "/workspaces/${localWorkspaceFolderBasename}/config/oidc.config.json"
+    "PORT": "3000"
   },
   "postAttachCommand": "npm run dev:container"
 }
